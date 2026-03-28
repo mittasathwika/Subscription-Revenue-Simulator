@@ -1,0 +1,19 @@
+version: 1
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - echo "Pre-build phase"
+    build:
+      commands:
+        - echo "Build phase - static files"
+  artifacts:
+    baseDirectory: /
+    files:
+      - 'index.html'
+      - 'styles.css'
+      - 'script.js'
+      - '**/*'
+  cache:
+    paths:
+      - node_modules/**/*
