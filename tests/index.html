@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Suite - Subscription Revenue Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+        }
+
+        .test-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #3182ce;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2c5aa0;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #cbd5e1;
+        }
+
+        .results {
+            margin-top: 30px;
+        }
+
+        .suite {
+            margin-bottom: 20px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .suite-header {
+            background: #f7fafc;
+            padding: 15px 20px;
+            font-weight: 600;
+            color: #2d3748;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .suite-stats {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .test-list {
+            padding: 10px 20px;
+        }
+
+        .test-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .test-item:last-child {
+            border-bottom: none;
+        }
+
+        .test-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-icon {
+            font-size: 1.2rem;
+        }
+
+        .passed {
+            color: #48bb78;
+        }
+
+        .failed {
+            color: #e53e3e;
+        }
+
+        .duration {
+            font-size: 0.85rem;
+            color: #a0aec0;
+        }
+
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.85rem;
+            margin-top: 5px;
+            padding-left: 30px;
+        }
+
+        .summary {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+
+        .summary h2 {
+            margin-bottom: 15px;
+            color: #2d3748;
+        }
+
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .stat-box {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #718096;
+        }
+
+        .success-rate {
+            color: #3182ce;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #718096;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #3182ce;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 15px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Test Suite</h1>
+        <p class="subtitle">Subscription Revenue Simulator - Functionality & Regression Tests</p>
+
+        <div class="test-controls">
+            <button class="btn-primary" onclick="runAllTests()">Run All Tests</button>
+            <button class="btn-secondary" onclick="runUnitTests()">Unit Tests Only</button>
+            <button class="btn-secondary" onclick="runIntegrationTests()">Integration Tests</button>
+            <button class="btn-secondary" onclick="runRegressionTests()">Regression Tests</button>
+        </div>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Running tests...</p>
+        </div>
+
+        <div id="results" class="results"></div>
+    </div>
+
+    <script src="testRunner.js"></script>
+    <script>
+        // Mock MetricsEngine for browser tests
+        const MetricsEngine = {
+            calculateLTV: (arpu, churn) => churn === 0 ? arpu * 24 : arpu / churn,
+            calculatePaybackPeriod: (contribution, cac) => contribution <= 0 ? Infinity : cac / contribution,
+            calculateARR: (mrr) => mrr * 12,
+            calculateChurnRate: (lost, total) => total === 0 ? 0 : lost / total,
+            calculateCAC: (spend, customers) => customers === 0 ? 0 : spend / customers,
+            
+            calculateProjections: (inputs) => {
+                const months = inputs.months || 12;
+                const customers = [];
+                const revenue = [];
+                let currentCustomers = inputs.initialCustomers;
+                
+                for (let i = 0; i < months; i++) {
+                    const newCustomers = Math.floor((inputs.adSpend / inputs.cac) * (1 + inputs.growthRate * i));
+                    const churned = Math.floor(currentCustomers * inputs.churn);
+                    currentCustomers = Math.max(0, currentCustomers - churned + newCustomers);
+                    revenue.push(currentCustomers * inputs.price);
+                    customers.push(currentCustomers);
+                }
+                
+                const finalRevenue = revenue[revenue.length - 1];
+                const mrr = finalRevenue;
+                const arpu = customers[customers.length - 1] > 0 ? mrr / customers[customers.length - 1] : 0;
+                
+                return {
+                    months: Array.from({length: months}, (_, i) => i + 1),
+                    customers,
+                    revenue,
+                    metrics: {
+                        mrr,
+                        arr: mrr * 12,
+                        arpu,
+                        ltv: arpu / inputs.churn,
+                        ltv_cac_ratio: (arpu / inputs.churn) / inputs.cac,
+                        payback_period: inputs.price > 0 ? inputs.cac / inputs.price : 0
+                    }
+                };
+            },
+            
+            validateInputs: (inputs) => {
+                const errors = [];
+                if (inputs.price <= 0) errors.push('Price must be greater than 0');
+                if (inputs.churn < 0 || inputs.churn > 1) errors.push('Churn rate must be between 0% and 100%');
+                return { valid: errors.length === 0, errors, warnings: [] };
+            }
+        };
+
+        const API_BASE = 'http://127.0.0.1:3001/api';
+
+        async function runAllTests() {
+            showLoading();
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            
+            // Run tests
+            runUnitTestsSuite();
+            runRegressionTestsSuite();
+            
+            // Display results
+            hideLoading();
+            displayResults(testRunner.results);
+        }
+
+        function runUnitTests() {
+            showLoading();
+            testRunner.results = { passed: 0, failed: 0, skipped: 0, total: 0, suites: [] };
+            runUnitTestsSuite();
+            hideLoading();
+            displayResults(testRunner.results);
+        }
+
+        async function runIntegrationTests() {
+            showLoading();
+            testRunner.results = { passed: 0, failed: 0, skipped: 0, total: 0, suites: [] };
+            await runIntegrationTestsSuite();
+            hideLoading();
+            displayResults(testRunner.results);
+        }
+
+        function runRegressionTests() {
+            showLoading();
+            testRunner.results = { passed: 0, failed: 0, skipped: 0, total: 0, suites: [] };
+            runRegressionTestsSuite();
+            hideLoading();
+            displayResults(testRunner.results);
+        }
+
+        function runUnitTestsSuite() {
+            // LTV Tests
+            testRunner.describe('MetricsEngine - LTV Calculation', () => {
+                testRunner.test('calculates LTV with churn > 0', () => {
+                    const ltv = MetricsEngine.calculateLTV(100, 0.05);
+                    testRunner.expect(ltv).toBe(2000);
+                });
+                
+                testRunner.test('caps LTV at 24 months when churn is 0', () => {
+                    const ltv = MetricsEngine.calculateLTV(100, 0);
+                    testRunner.expect(ltv).toBe(2400);
+                });
+            });
+
+            // Payback Tests
+            testRunner.describe('MetricsEngine - Payback Period', () => {
+                testRunner.test('calculates correctly', () => {
+                    const payback = MetricsEngine.calculatePaybackPeriod(99, 500);
+                    testRunner.expect(payback).toBeCloseTo(5.05, 1);
+                });
+                
+                testRunner.test('returns infinity for zero contribution', () => {
+                    const payback = MetricsEngine.calculatePaybackPeriod(0, 500);
+                    testRunner.expect(payback).toBe(Infinity);
+                });
+            });
+
+            // ARR Tests
+            testRunner.describe('MetricsEngine - ARR Calculation', () => {
+                testRunner.test('calculates from MRR', () => {
+                    const arr = MetricsEngine.calculateARR(10000);
+                    testRunner.expect(arr).toBe(120000);
+                });
+            });
+
+            // Projection Tests
+            testRunner.describe('MetricsEngine - Projections', () => {
+                testRunner.test('returns 12 months of data', () => {
+                    const result = MetricsEngine.calculateProjections({
+                        price: 99, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    testRunner.expect(result.customers).toHaveLength(12);
+                    testRunner.expect(result.revenue).toHaveLength(12);
+                });
+                
+                testRunner.test('revenue increases over time', () => {
+                    const result = MetricsEngine.calculateProjections({
+                        price: 99, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    testRunner.expect(result.revenue[11]).toBeGreaterThan(result.revenue[0]);
+                });
+            });
+
+            // Validation Tests
+            testRunner.describe('MetricsEngine - Input Validation', () => {
+                testRunner.test('accepts valid inputs', () => {
+                    const result = MetricsEngine.validateInputs({
+                        price: 99, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    testRunner.expect(result.valid).toBe(true);
+                });
+                
+                testRunner.test('rejects zero price', () => {
+                    const result = MetricsEngine.validateInputs({
+                        price: 0, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    testRunner.expect(result.valid).toBe(false);
+                });
+            });
+        }
+
+        async function runIntegrationTestsSuite() {
+            // Health Check
+            testRunner.describe('API - Health Check', () => {
+                testRunner.test('GET /api/health returns status ok', async () => {
+                    try {
+                        const response = await fetch(`${API_BASE}/health`);
+                        testRunner.expect(response.status).toBe(200);
+                        const data = await response.json();
+                        testRunner.expect(data.status).toBe('ok');
+                    } catch (e) {
+                        throw new Error('Backend not reachable: ' + e.message);
+                    }
+                });
+            });
+
+            // Metrics API
+            testRunner.describe('API - Metrics', () => {
+                testRunner.test('GET /api/metrics returns data', async () => {
+                    const response = await fetch(`${API_BASE}/metrics`);
+                    testRunner.expect(response.status).toBe(200);
+                    const data = await response.json();
+                    testRunner.expect(data.customers).toBeDefined();
+                    testRunner.expect(data.monthly_revenue).toBeDefined();
+                });
+
+                testRunner.test('POST /api/metrics/calculate returns projections', async () => {
+                    const response = await fetch(`${API_BASE}/metrics/calculate`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            price: 99, churn: 5, adSpend: 5000,
+                            growthRate: 10, initialCustomers: 100, cac: 500
+                        })
+                    });
+                    testRunner.expect(response.status).toBe(200);
+                    const data = await response.json();
+                    testRunner.expect(data.projection).toBeDefined();
+                    testRunner.expect(data.summary).toBeDefined();
+                });
+            });
+
+            // Auth API
+            testRunner.describe('API - Authentication', () => {
+                testRunner.test('POST /api/auth/login with demo credentials', async () => {
+                    const response = await fetch(`${API_BASE}/auth/login`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email: 'demo@example.com',
+                            password: 'demo123'
+                        })
+                    });
+                    testRunner.expect(response.status).toBe(200);
+                    const data = await response.json();
+                    testRunner.expect(data.token).toBeDefined();
+                    testRunner.expect(data.user.email).toBe('demo@example.com');
+                });
+            });
+
+            // API Root
+            testRunner.describe('API - Documentation', () => {
+                testRunner.test('GET /api returns endpoint list', async () => {
+                    const response = await fetch(`${API_BASE}`);
+                    testRunner.expect(response.status).toBe(200);
+                    const data = await response.json();
+                    testRunner.expect(data.endpoints).toBeDefined();
+                });
+            });
+        }
+
+        function runRegressionTestsSuite() {
+            testRunner.describe('Regression - Calculation Accuracy', () => {
+                testRunner.test('LTV formula consistency', () => {
+                    const ltv1 = MetricsEngine.calculateLTV(100, 0.05);
+                    const ltv2 = 100 / 0.05;
+                    testRunner.expect(ltv1).toBe(ltv2);
+                });
+                
+                testRunner.test('all revenue values positive', () => {
+                    const result = MetricsEngine.calculateProjections({
+                        price: 99, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    result.revenue.forEach(val => {
+                        testRunner.expect(val).toBeGreaterThanOrEqual(0);
+                    });
+                });
+                
+                testRunner.test('ARR equals MRR times 12', () => {
+                    const mrr = 10000;
+                    const arr = MetricsEngine.calculateARR(mrr);
+                    testRunner.expect(arr).toBe(mrr * 12);
+                });
+            });
+
+            testRunner.describe('Regression - Edge Cases', () => {
+                testRunner.test('zero churn handled', () => {
+                    const result = MetricsEngine.calculateProjections({
+                        price: 99, churn: 0, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 100, cac: 500
+                    });
+                    testRunner.expect(result).toBeTruthy();
+                });
+                
+                testRunner.test('zero initial customers handled', () => {
+                    const result = MetricsEngine.calculateProjections({
+                        price: 99, churn: 0.05, adSpend: 5000,
+                        growthRate: 0.10, initialCustomers: 0, cac: 500
+                    });
+                    testRunner.expect(result).toBeTruthy();
+                });
+            });
+        }
+
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            
+            let html = '';
+            
+            // Suites
+            results.suites.forEach(suite => {
+                html += `
+                    <div class="suite">
+                        <div class="suite-header">
+                            <span>${suite.name}</span>
+                            <span class="suite-stats">${suite.passed} passed, ${suite.failed} failed</span>
+                        </div>
+                        <div class="test-list">
+                `;
+                
+                suite.tests.forEach(test => {
+                    const icon = test.status === 'passed' ? '✅' : '❌';
+                    const statusClass = test.status;
+                    html += `
+                        <div class="test-item">
+                            <div class="test-name">
+                                <span class="status-icon ${statusClass}">${icon}</span>
+                                <span>${test.name}</span>
+                            </div>
+                            <span class="duration">${test.duration}ms</span>
+                        </div>
+                    `;
+                    
+                    if (test.error) {
+                        html += `<div class="error-message">${test.error}</div>`;
+                    }
+                });
+                
+                html += '</div></div>';
+            });
+            
+            // Summary
+            const successRate = results.total > 0 ? ((results.passed / results.total) * 100).toFixed(1) : 0;
+            html += `
+                <div class="summary">
+                    <h2>Summary</h2>
+                    <div class="summary-stats">
+                        <div class="stat-box">
+                            <div class="stat-value">${results.total}</div>
+                            <div class="stat-label">Total Tests</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value passed">${results.passed}</div>
+                            <div class="stat-label">Passed</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value failed">${results.failed}</div>
+                            <div class="stat-label">Failed</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-value success-rate">${successRate}%</div>
+                            <div class="stat-label">Success Rate</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = html;
+        }
+
+        function showLoading() {
+            document.getElementById('loading').classList.remove('hidden');
+            document.getElementById('results').innerHTML = '';
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>

@@ -3,20 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Subscription Revenue Simulator - Phase 1</title>
+    <title>Subscription Revenue Simulator - Phase 2</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Subscription Revenue Simulator</h1>
-            <p>Basic SaaS revenue calculations and projections</p>
-        </header>
+    <div class="app">
+        <!-- Sidebar for Scenarios -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Saved Scenarios</h3>
+                <span id="connectionStatus" class="status-badge">checking...</span>
+            </div>
+            <div id="scenariosList" class="scenarios-list">
+                <p class="no-scenarios">No saved scenarios yet</p>
+            </div>
+            <div class="sidebar-actions">
+                <button id="compareBtn" class="btn-secondary" disabled>Compare Scenarios</button>
+            </div>
+        </aside>
 
-        <main>
+        <!-- Main Content -->
+        <main class="main-content">
+            <header>
+                <div class="header-content">
+                    <div class="header-title">
+                        <h1>Subscription Revenue Simulator</h1>
+                        <p>Real-time SaaS analytics + simulation tool</p>
+                    </div>
+                    <div class="auth-section" id="authSection">
+                        <button id="loginBtn" class="btn-secondary">Login</button>
+                        <span id="userInfo" class="user-info" style="display: none;"></span>
+                        <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Real Data Section -->
+            <section class="real-data-section">
+                <h2>Live Business Metrics</h2>
+                <div id="realMetrics" class="real-metrics-display">
+                    <div class="metrics-grid">
+                        <div class="metric-card real">
+                            <label>Real Customers</label>
+                            <value>150</value>
+                        </div>
+                        <div class="metric-card real">
+                            <label>Real MRR</label>
+                            <value>$14,850</value>
+                        </div>
+                        <div class="metric-card real">
+                            <label>Real ARR</label>
+                            <value>$178,200</value>
+                        </div>
+                        <div class="metric-card real">
+                            <label>Churn Rate</label>
+                            <value>4.0%</value>
+                        </div>
+                    </div>
+                    <small class="data-source">⚪ Demo Data</small>
+                </div>
+            </section>
+
+            <!-- Simulation Inputs -->
             <section class="input-section">
-                <h2>Business Parameters</h2>
+                <h2>Simulation Parameters</h2>
                 <div class="input-grid">
                     <div class="input-group">
                         <label for="price">Monthly Price ($)</label>
@@ -45,28 +96,31 @@
                 </div>
                 <div class="button-group">
                     <button id="calculateBtn" class="btn-primary">Calculate Projections</button>
+                    <button id="saveScenarioBtn" class="btn-secondary">Save Scenario</button>
+                    <button id="exportBtn" class="btn-secondary">Export Data</button>
                 </div>
             </section>
 
+            <!-- Key Metrics -->
             <section class="metrics-section">
-                <h2>Key Metrics</h2>
+                <h2>Simulated Key Metrics</h2>
                 <div class="metrics-grid">
-                    <div class="metric-card">
+                    <div class="metric-card simulated">
                         <h3>LTV</h3>
                         <p id="ltvValue">$0</p>
                         <span class="metric-subtitle">Lifetime Value</span>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card simulated">
                         <h3>ARR</h3>
                         <p id="arrValue">$0</p>
                         <span class="metric-subtitle">Annual Recurring Revenue</span>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card simulated">
                         <h3>LTV/CAC Ratio</h3>
                         <p id="ltvCacRatio">0</p>
                         <span class="metric-subtitle">Efficiency Metric</span>
                     </div>
-                    <div class="metric-card">
+                    <div class="metric-card simulated">
                         <h3>Payback Period</h3>
                         <p id="paybackPeriod">0 months</p>
                         <span class="metric-subtitle">CAC Recovery Time</span>
@@ -74,6 +128,15 @@
                 </div>
             </section>
 
+            <!-- Detailed Metrics -->
+            <section class="detailed-metrics-section">
+                <h2>Detailed Projections</h2>
+                <div id="detailedMetrics" class="detailed-metrics">
+                    <p class="placeholder">Click "Calculate Projections" to see detailed metrics</p>
+                </div>
+            </section>
+
+            <!-- Charts -->
             <section class="charts-section">
                 <h2>12-Month Projections</h2>
                 <div class="chart-container">
@@ -86,6 +149,49 @@
         </main>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Auth Modal -->
+    <div id="authModal" class="modal" style="display: none;">
+        <div class="modal-content auth-modal">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-tab="login">Login</button>
+                <button class="auth-tab" data-tab="signup">Sign Up</button>
+            </div>
+            
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form">
+                <h3>Welcome Back</h3>
+                <div class="input-group">
+                    <label for="loginEmail">Email</label>
+                    <input type="email" id="loginEmail" required placeholder="Enter your email">
+                </div>
+                <div class="input-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="Enter your password" minlength="6">
+                </div>
+                <div id="loginError" class="auth-error"></div>
+                <button type="submit" class="btn-primary btn-full">Login</button>
+                <p class="demo-hint">Demo: Use email "demo@example.com" with password "demo123"</p>
+            </form>
+            
+            <!-- Signup Form -->
+            <form id="signupForm" class="auth-form" style="display: none;">
+                <h3>Create Account</h3>
+                <div class="input-group">
+                    <label for="signupEmail">Email</label>
+                    <input type="email" id="signupEmail" required placeholder="Enter your email">
+                </div>
+                <div class="input-group">
+                    <label for="signupPassword">Password</label>
+                    <input type="password" id="signupPassword" required placeholder="Create a password (min 6 chars)" minlength="6">
+                </div>
+                <div id="signupError" class="auth-error"></div>
+                <button type="submit" class="btn-primary btn-full">Create Account</button>
+            </form>
+            
+            <button class="modal-close" onclick="document.getElementById('authModal').style.display='none'">✕</button>
+        </div>
+    </div>
+
+    <script src="phase2-script.js"></script>
 </body>
 </html>
