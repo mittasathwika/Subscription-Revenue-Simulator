@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "figma": {
+      "type": "remote",
+      "command": "npx",
+      "args": ["-y", "@figma/mcp-server@latest"],
+      "env": {
+        "FIGMA_API_KEY": "YOUR_FIGMA_API_KEY_HERE"
+      },
+      "disabled": false,
+      "description": "Figma MCP Server for design-to-code generation"
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "timeout": 30,
+      "args": ["-y", "@playwright/mcp@latest"],
+      "disabled": false,
+      "description": "Playwright MCP Server for browser automation and testing"
+    }
+  }
+}
