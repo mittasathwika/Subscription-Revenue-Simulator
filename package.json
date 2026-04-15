@@ -1,0 +1,36 @@
+{
+  "name": "subscription-revenue-simulator",
+  "version": "1.0.0",
+  "description": "A powerful SaaS financial modeling tool designed to help startup founders understand key metrics like churn, CAC, LTV, and ARR modeling.",
+  "main": "phase2-script.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "cd backend && node server.js",
+    
+        
+        
+        
+            
+        
+        
+        
+        
+        
+        
+        
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mittasathwika/subscription-Revenue-Simulator.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mittasathwika/subscription-Revenue-Simulator/issues"
+  },
+  "homepage": "https://github.com/mittasathwika/subscription-Revenue-Simulator#readme"
+}

@@ -3,9 +3,12 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../models/database');
 const MetricsEngine = require('../utils/metricsEngine');
+const { optionalAuth, authenticateToken } = require('../middleware/auth');
+const { metricsValidation } = require('../middleware/validator');
+const { calculationLimiter } = require('../middleware/rateLimiter');
 
 // GET /api/metrics - Get real metrics for user
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
     try {
         const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo';
@@ -61,7 +64,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /api/metrics/calculate - Calculate projections based on inputs
-router.post('/calculate', async (req, res) => {
+router.post('/calculate', calculationLimiter, metricsValidation.calculate, async (req, res) => {
     try {
         const inputs = {
             price: parseFloat(req.body.price) || 99,
@@ -104,8 +107,8 @@ router.post('/calculate', async (req, res) => {
     }
 });
 
-// POST /api/metrics/real - Update real metrics (simulated Stripe connection)
-router.post('/real', async (req, res) => {
+// POST /api/metrics/real - Update real metrics (protected route)
+router.post('/real', authenticateToken, metricsValidation.updateReal, async (req, res) => {
     try {
         const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';
@@ -140,7 +143,7 @@ router.post('/real', async (req, res) => {
 });
 
 // GET /api/metrics/compare - Compare real vs simulated data
-router.get('/compare', async (req, res) => {
+router.get('/compare', optionalAuth, async (req, res) => {
     try {
         const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';

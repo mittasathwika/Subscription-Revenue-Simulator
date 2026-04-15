@@ -1,21 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../models/database');
+const { generateToken, generateRefreshToken } = require('../middleware/auth');
+const { authValidation } = require('../middleware/validator');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // POST /api/auth/signup
-router.post('/signup', async (req, res) => {
+router.post('/signup', authValidation.signup, async (req, res) => {
     try {
         const db = getDatabase();
         const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
-        }
         
         // Check if user exists
         db.get('SELECT id FROM users WHERE email = ?', [email], (err, row) => {
@@ -34,12 +31,15 @@ router.post('/signup', async (req, res) => {
                         return res.status(500).json({ error: err.message });
                     }
                     
-                    const token = jwt.sign({ userId, email }, JWT_SECRET, { expiresIn: '24h' });
+                    const token = generateToken(userId, email);
+                    const refreshToken = generateRefreshToken(userId);
                     
                     res.status(201).json({
                         success: true,
                         token,
-                        user: { id: userId, email }
+                        refreshToken,
+                        user: { id: userId, email },
+                        message: 'Account created successfully'
                     });
                 }
             );
@@ -50,14 +50,10 @@ router.post('/signup', async (req, res) => {
 });
 
 // POST /api/auth/login
-router.post('/login', async (req, res) => {
+router.post('/login', authValidation.login, async (req, res) => {
     try {
         const db = getDatabase();
         const { email, password } = req.body;
-        
-        if (!email || !password) {
-            return res.status(400).json({ error: 'Email and password are required' });
-        }
         
         db.get('SELECT * FROM users WHERE email = ?', [email], (err, user) => {
             if (err || !user) {
@@ -72,12 +68,15 @@ router.post('/login', async (req, res) => {
             // Update last login
             db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [user.id]);
             
-            const token = jwt.sign({ userId: user.id, email }, JWT_SECRET, { expiresIn: '24h' });
+            const token = generateToken(user.id, email);
+            const refreshToken = generateRefreshToken(user.id);
             
             res.json({
                 success: true,
                 token,
-                user: { id: user.id, email: user.email }
+                refreshToken,
+                user: { id: user.id, email: user.email },
+                message: 'Login successful'
             });
         });
     } catch (error) {

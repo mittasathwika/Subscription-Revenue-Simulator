@@ -3,9 +3,11 @@ const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../models/database');
 const MetricsEngine = require('../utils/metricsEngine');
+const { optionalAuth, authenticateToken } = require('../middleware/auth');
+const { scenarioValidation } = require('../middleware/validator');
 
 // GET /api/scenarios - List all scenarios for user
-router.get('/', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
     try {
         const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';
@@ -46,7 +48,7 @@ router.get('/', async (req, res) => {
 });
 
 // GET /api/scenarios/:id - Get specific scenario
-router.get('/:id', async (req, res) => {
+router.get('/:id', optionalAuth, async (req, res) => {
     try {
         const db = getDatabase();
         const { id } = req.params;
@@ -91,8 +93,8 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// POST /api/scenarios - Create new scenario
-router.post('/', async (req, res) => {
+// POST /api/scenarios - Create new scenario (protected)
+router.post('/', authenticateToken, scenarioValidation.create, async (req, res) => {
     try {
         const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';
@@ -132,8 +134,8 @@ router.post('/', async (req, res) => {
     }
 });
 
-// PUT /api/scenarios/:id - Update scenario
-router.put('/:id', async (req, res) => {
+// PUT /api/scenarios/:id - Update scenario (protected)
+router.put('/:id', authenticateToken, scenarioValidation.update, async (req, res) => {
     try {
         const db = getDatabase();
         const { id } = req.params;
@@ -172,8 +174,8 @@ router.put('/:id', async (req, res) => {
     }
 });
 
-// DELETE /api/scenarios/:id - Delete scenario
-router.delete('/:id', async (req, res) => {
+// DELETE /api/scenarios/:id - Delete scenario (protected)
+router.delete('/:id', authenticateToken, async (req, res) => {
     try {
         const db = getDatabase();
         const { id } = req.params;
@@ -197,8 +199,8 @@ router.delete('/:id', async (req, res) => {
     }
 });
 
-// POST /api/scenarios/compare - Compare multiple scenarios
-router.post('/compare', async (req, res) => {
+// POST /api/scenarios/compare - Compare multiple scenarios (protected)
+router.post('/compare', optionalAuth, scenarioValidation.compare, async (req, res) => {
     try {
         const { scenario_ids } = req.body;
         
