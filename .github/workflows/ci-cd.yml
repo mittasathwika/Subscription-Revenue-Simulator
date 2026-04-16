@@ -6,14 +6,6 @@ on:
   pull_request:
     branches: [ main ]
 
-# Required permissions for CodeQL and security features
-permissions:
-  actions: read
-  contents: read
-  security-events: write
-  packages: write
-  id-token: write
-
 env:
   NODE_VERSION: '18'
   REGISTRY: ghcr.io
@@ -88,9 +80,9 @@ jobs:
     - name: Run integration tests
       working-directory: ./tests
       run: |
-        cd ../backend && npm start &
+        npm start &
         sleep 5
-        cd ../tests && node regression-test.js
+        node regression.test.js
         pkill -f "node server.js" || true
     
     - name: Upload coverage reports
