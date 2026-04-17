@@ -6,7 +6,7 @@ on:
   pull_request:
     branches: [ main ]
 
-# Required permissions for CodeQL security analysis
+# Required permissions for CodeQL and security scanning
 permissions:
   actions: read
   contents: read
