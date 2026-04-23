@@ -92,11 +92,12 @@ jobs:
         path: tests/playwright-report/
         retention-days: 30
 
-  # Job 3: Build Docker Image
+  # Job 3: Build Docker Image (only on main branch, not PRs)
   build:
     name: Build Docker Image
     runs-on: ubuntu-latest
     needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     
     steps:
     - name: Checkout code
@@ -137,7 +138,7 @@ jobs:
   deploy-staging:
     name: Deploy to Staging
     runs-on: ubuntu-latest
-    needs: build
+    needs: [lint-and-security, test]
     if: github.ref == 'refs/heads/develop'
     environment: staging
     
@@ -162,8 +163,8 @@ jobs:
   deploy-production:
     name: Deploy to Production
     runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main'
+    needs: [lint-and-security, test, build]
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     environment: production
     
     steps:
