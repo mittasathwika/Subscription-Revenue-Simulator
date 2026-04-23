@@ -1,120 +1,13 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-
-const DB_PATH = path.join(__dirname, '..', 'data', 'simulator.db');
-
-let db = null;
-
-function getDatabase() {
-    if (!db) {
-        db = new sqlite3.Database(DB_PATH, (err) => {
-            if (err) {
-                console.error('Database connection error:', err);
-            } else {
-                console.log('✅ Connected to SQLite database');
-            }
-        });
-    }
-    return db;
-}
+// DynamoDB-only database module
+// SQLite has been removed - all data stored in DynamoDB
 
 function initializeDatabase() {
-    const fs = require('fs');
-    const dataDir = path.join(__dirname, '..', 'data');
-    
-    if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-    }
-    
-    const database = getDatabase();
-    
-    // Create tables
-    database.exec(`
-        CREATE TABLE IF NOT EXISTS users (
-            id TEXT PRIMARY KEY,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            last_login DATETIME
-        );
-
-        CREATE TABLE IF NOT EXISTS real_metrics (
-            id TEXT PRIMARY KEY,
-            user_id TEXT,
-            customers INTEGER DEFAULT 0,
-            monthly_revenue REAL DEFAULT 0,
-            churn_rate REAL DEFAULT 0.05,
-            ad_spend REAL DEFAULT 0,
-            cac REAL DEFAULT 500,
-            recorded_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS scenarios (
-            id TEXT PRIMARY KEY,
-            user_id TEXT,
-            name TEXT NOT NULL,
-            price REAL DEFAULT 99,
-            churn_rate REAL DEFAULT 0.05,
-            ad_spend REAL DEFAULT 5000,
-            growth_rate REAL DEFAULT 0.10,
-            initial_customers INTEGER DEFAULT 100,
-            cac REAL DEFAULT 500,
-            projection_data TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users(id)
-        );
-
-        CREATE TABLE IF NOT EXISTS simulations (
-            id TEXT PRIMARY KEY,
-            scenario_id TEXT,
-            month INTEGER,
-            customers INTEGER,
-            revenue REAL,
-            new_customers INTEGER,
-            churned_customers INTEGER,
-            FOREIGN KEY (scenario_id) REFERENCES scenarios(id)
-        );
-
-        CREATE INDEX IF NOT EXISTS idx_scenarios_user ON scenarios(user_id);
-        CREATE INDEX IF NOT EXISTS idx_real_metrics_user ON real_metrics(user_id);
-    `, (err) => {
-        if (err) {
-            console.error('Database initialization error:', err);
-        } else {
-            console.log('✅ Database tables initialized');
-            seedDemoData();
-        }
-    });
+    console.log('🔹 DynamoDB mode - no local database initialization needed');
 }
 
-function seedDemoData() {
-    const database = getDatabase();
-    const { v4: uuidv4 } = require('uuid');
-    
-    // Check if demo user exists
-    database.get('SELECT id FROM users WHERE email = ?', ['demo@example.com'], (err, row) => {
-        if (!row) {
-            const demoUserId = uuidv4();
-            const bcrypt = require('bcryptjs');
-            const passwordHash = bcrypt.hashSync('demo123', 10);
-            
-            database.run(
-                'INSERT INTO users (id, email, password_hash) VALUES (?, ?, ?)',
-                [demoUserId, 'demo@example.com', passwordHash]
-            );
-            
-            // Seed demo real metrics
-            database.run(
-                `INSERT INTO real_metrics (id, user_id, customers, monthly_revenue, churn_rate, ad_spend, cac) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [uuidv4(), demoUserId, 150, 14850, 0.04, 6000, 450]
-            );
-            
-            console.log('✅ Demo data seeded');
-        }
-    });
+function getDatabase() {
+    // Returns null - DynamoDB is used instead via dynamodb.js
+    return null;
 }
 
 module.exports = {

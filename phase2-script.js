@@ -13,12 +13,6 @@ class EnhancedRevenueSimulator {
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         const guestMode = localStorage.getItem('guestMode') === 'true';
         
-        // Redirect to login if not authenticated and not in guest mode
-        if (!this.authToken && !guestMode) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
         this.currentProjection = null;
         this.revenueChart = null;
         this.customerChart = null;
@@ -29,8 +23,15 @@ class EnhancedRevenueSimulator {
         this.initializeEventListeners();
         this.initializeAuthEventListeners();
         this.updateAuthUI();
-        this.loadScenarios();
-        this.checkBackendConnection();
+        
+        // Show auth modal if not authenticated and not in guest mode
+        if (!this.authToken && !guestMode) {
+            // Small delay to ensure DOM is ready
+            setTimeout(() => this.showAuthModal(), 100);
+        } else {
+            this.loadScenarios();
+            this.checkBackendConnection();
+        }
     }
 
     async checkBackendConnection() {
@@ -514,21 +515,56 @@ class EnhancedRevenueSimulator {
             return;
         }
         
-        const data = {
-            inputs: this.currentProjection.inputs,
-            projection: {
-                customers: this.currentProjection.customers,
-                revenue: this.currentProjection.revenue
-            },
-            metrics: this.currentProjection.metrics,
-            exportedAt: new Date().toISOString()
-        };
+        const inputs = this.currentProjection.inputs;
+        const customers = this.currentProjection.customers;
+        const revenue = this.currentProjection.revenue;
+        const metrics = this.currentProjection.metrics || this.calculateMetrics(this.currentProjection);
+        const months = customers ? customers.length : 12;
         
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        // Helper to format numbers without commas (commas break CSV columns)
+        const fmt = (num) => Number(num || 0).toFixed(2);
+        const fmtInt = (num) => Math.round(num || 0).toString();
+        
+        // Build CSV content
+        let csv = 'Subscription Revenue Simulator - Export\n';
+        csv += `Generated on,"${new Date().toLocaleString()}"\n\n`;
+        
+        // Section 1: Inputs
+        csv += 'INPUTS\n';
+        csv += 'Parameter,Value\n';
+        csv += `Monthly Price,$${fmt(inputs?.price)}\n`;
+        csv += `Churn Rate,${fmt((inputs?.churn || 0) * 100)}%\n`;
+        csv += `Ad Spend,$${fmt(inputs?.adSpend)}\n`;
+        csv += `Growth Rate,${fmt((inputs?.growthRate || 0) * 100)}%\n`;
+        csv += `Initial Customers,${fmtInt(inputs?.initialCustomers)}\n`;
+        csv += `CAC (Customer Acquisition Cost),$${fmt(inputs?.cac)}\n\n`;
+        
+        // Section 2: Key Metrics (with safe defaults)
+        csv += 'KEY METRICS\n';
+        csv += 'Metric,Value\n';
+        csv += `Total Customers,${fmtInt(metrics?.totalCustomers || customers?.[customers.length-1] || 0)}\n`;
+        csv += `Monthly Revenue,$${fmt(metrics?.monthlyRevenue || revenue?.[revenue.length-1] || 0)}\n`;
+        csv += `Annual Revenue (ARR),$${fmt(metrics?.arr || 0)}\n`;
+        csv += `Average Revenue Per User (ARPU),$${fmt(metrics?.arpu)}\n`;
+        csv += `Customer Lifetime Value (LTV),$${fmt(metrics?.ltv)}\n`;
+        csv += `LTV/CAC Ratio,${fmt(metrics?.ltvCacRatio)}\n`;
+        csv += `CAC Payback Period,${fmt(metrics?.paybackPeriod)} months\n\n`;
+        
+        // Section 3: Monthly Projections
+        csv += 'MONTHLY PROJECTIONS\n';
+        csv += 'Month,Customers,Revenue\n';
+        for (let i = 0; i < months; i++) {
+            const cust = customers?.[i] || 0;
+            const rev = revenue?.[i] || 0;
+            csv += `Month ${i + 1},${fmtInt(cust)},$${fmt(rev)}\n`;
+        }
+        
+        // Create and download CSV file
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `simulation-${Date.now()}.json`;
+        a.download = `simulation-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     }

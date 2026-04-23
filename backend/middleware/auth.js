@@ -65,7 +65,7 @@ const optionalAuth = (req, res, next) => {
 /**
  * Generate JWT Token
  */
-const generateToken = (userId, email, expiresIn = '24h') => {
+const generateToken = (userId, email, expiresIn = '7d') => {
     return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn });
 };
 
@@ -73,7 +73,7 @@ const generateToken = (userId, email, expiresIn = '24h') => {
  * Generate Refresh Token
  */
 const generateRefreshToken = (userId) => {
-    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '7d' });
+    return jwt.sign({ userId }, JWT_SECRET, { expiresIn: '30d' });
 };
 
 module.exports = {

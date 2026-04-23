@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
-const { getDatabase } = require('../models/database');
+const { getRealMetrics, saveRealMetrics } = require('../models/dynamodb');
 const MetricsEngine = require('../utils/metricsEngine');
 const { optionalAuth, authenticateToken } = require('../middleware/auth');
 const { metricsValidation } = require('../middleware/validator');
@@ -10,55 +10,44 @@ const { calculationLimiter } = require('../middleware/rateLimiter');
 // GET /api/metrics - Get real metrics for user
 router.get('/', optionalAuth, async (req, res) => {
     try {
-        const db = getDatabase();
-        const userId = req.headers['x-user-id'] || 'demo';
+        const userId = req.headers['x-user-id'] || 'demo@example.com';
         
-        // Get latest real metrics
-        db.get(
-            `SELECT * FROM real_metrics 
-             WHERE user_id = (SELECT id FROM users WHERE email = ?) 
-             ORDER BY recorded_at DESC LIMIT 1`,
-            [userId === 'demo' ? 'demo@example.com' : userId],
-            (err, row) => {
-                if (err) {
-                    return res.status(500).json({ error: err.message });
-                }
-                
-                if (!row) {
-                    // Return default metrics if none exist
-                    return res.json({
-                        customers: 100,
-                        monthly_revenue: 9900,
-                        churn_rate: 0.05,
-                        ad_spend: 5000,
-                        cac: 500,
-                        source: 'default'
-                    });
-                }
-                
-                // Calculate derived metrics
-                const metrics = {
-                    customers: row.customers,
-                    monthly_revenue: row.monthly_revenue,
-                    churn_rate: row.churn_rate,
-                    ad_spend: row.ad_spend,
-                    cac: row.cac,
-                    arr: row.monthly_revenue * 12,
-                    arpu: row.monthly_revenue / row.customers,
-                    ltv: MetricsEngine.calculateLTV(row.monthly_revenue / row.customers, row.churn_rate),
-                    ltv_cac_ratio: 0,
-                    payback_period: 0,
-                    source: 'real_data',
-                    recorded_at: row.recorded_at
-                };
-                
-                metrics.ltv_cac_ratio = metrics.ltv / row.cac;
-                metrics.payback_period = MetricsEngine.calculatePaybackPeriod(metrics.arpu, row.cac);
-                
-                res.json(metrics);
-            }
-        );
+        const row = await getRealMetrics(userId);
+        
+        if (!row) {
+            // Return default metrics if none exist
+            return res.json({
+                customers: 100,
+                monthly_revenue: 9900,
+                churn_rate: 0.05,
+                ad_spend: 5000,
+                cac: 500,
+                source: 'default'
+            });
+        }
+        
+        // Calculate derived metrics
+        const metrics = {
+            customers: row.customers,
+            monthly_revenue: row.monthly_revenue,
+            churn_rate: row.churn_rate,
+            ad_spend: row.ad_spend,
+            cac: row.cac,
+            arr: row.monthly_revenue * 12,
+            arpu: row.monthly_revenue / row.customers,
+            ltv: MetricsEngine.calculateLTV(row.monthly_revenue / row.customers, row.churn_rate),
+            ltv_cac_ratio: 0,
+            payback_period: 0,
+            source: 'real_data',
+            recorded_at: row.updated_at || row.recorded_at
+        };
+        
+        metrics.ltv_cac_ratio = metrics.ltv / row.cac;
+        metrics.payback_period = MetricsEngine.calculatePaybackPeriod(metrics.arpu, row.cac);
+        
+        res.json(metrics);
     } catch (error) {
+        console.error('Error getting metrics:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -110,34 +99,24 @@ router.post('/calculate', calculationLimiter, metricsValidation.calculate, async
 // POST /api/metrics/real - Update real metrics (protected route)
 router.post('/real', authenticateToken, metricsValidation.updateReal, async (req, res) => {
     try {
-        const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';
-        const metricsId = uuidv4();
         
         const { customers, monthly_revenue, churn_rate, ad_spend, cac } = req.body;
         
-        db.get('SELECT id FROM users WHERE email = ?', [userId], (err, user) => {
-            if (err || !user) {
-                return res.status(404).json({ error: 'User not found' });
-            }
-            
-            db.run(
-                `INSERT INTO real_metrics (id, user_id, customers, monthly_revenue, churn_rate, ad_spend, cac) 
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [metricsId, user.id, customers, monthly_revenue, churn_rate, ad_spend, cac],
-                function(err) {
-                    if (err) {
-                        return res.status(500).json({ error: err.message });
-                    }
-                    res.json({ 
-                        success: true, 
-                        id: metricsId,
-                        message: 'Real metrics updated successfully'
-                    });
-                }
-            );
+        await saveRealMetrics(userId, {
+            customers,
+            monthly_revenue,
+            churn_rate,
+            ad_spend,
+            cac
+        });
+        
+        res.json({ 
+            success: true, 
+            message: 'Real metrics updated successfully'
         });
     } catch (error) {
+        console.error('Error saving metrics:', error);
         res.status(500).json({ error: error.message });
     }
 });
@@ -145,56 +124,49 @@ router.post('/real', authenticateToken, metricsValidation.updateReal, async (req
 // GET /api/metrics/compare - Compare real vs simulated data
 router.get('/compare', optionalAuth, async (req, res) => {
     try {
-        const db = getDatabase();
         const userId = req.headers['x-user-id'] || 'demo@example.com';
         
-        // Get real metrics
-        db.get(
-            `SELECT * FROM real_metrics 
-             WHERE user_id = (SELECT id FROM users WHERE email = ?) 
-             ORDER BY recorded_at DESC LIMIT 1`,
-            [userId],
-            (err, realData) => {
-                if (err || !realData) {
-                    return res.status(404).json({ error: 'No real data found' });
+        const realData = await getRealMetrics(userId);
+        
+        if (!realData) {
+            return res.status(404).json({ error: 'No real data found' });
+        }
+        
+        // Generate simulated projection based on real data
+        const inputs = {
+            price: realData.monthly_revenue / realData.customers,
+            churn: realData.churn_rate,
+            adSpend: realData.ad_spend,
+            growthRate: 0.10, // Default growth assumption
+            initialCustomers: realData.customers,
+            cac: realData.cac,
+            months: 12
+        };
+        
+        const simulated = MetricsEngine.calculateProjections(inputs);
+        
+        res.json({
+            real: {
+                customers: realData.customers,
+                monthly_revenue: realData.monthly_revenue,
+                arr: realData.monthly_revenue * 12,
+                churn_rate: realData.churn_rate,
+                recorded_at: realData.updated_at || realData.recorded_at
+            },
+            simulated: {
+                projection: simulated,
+                summary: {
+                    projected_arr_12mo: simulated.revenue[11] * 12,
+                    customer_growth: ((simulated.customers[11] - realData.customers) / realData.customers * 100).toFixed(1) + '%'
                 }
-                
-                // Generate simulated projection based on real data
-                const inputs = {
-                    price: realData.monthly_revenue / realData.customers,
-                    churn: realData.churn_rate,
-                    adSpend: realData.ad_spend,
-                    growthRate: 0.10, // Default growth assumption
-                    initialCustomers: realData.customers,
-                    cac: realData.cac,
-                    months: 12
-                };
-                
-                const simulated = MetricsEngine.calculateProjections(inputs);
-                
-                res.json({
-                    real: {
-                        customers: realData.customers,
-                        monthly_revenue: realData.monthly_revenue,
-                        arr: realData.monthly_revenue * 12,
-                        churn_rate: realData.churn_rate,
-                        recorded_at: realData.recorded_at
-                    },
-                    simulated: {
-                        projection: simulated,
-                        summary: {
-                            projected_arr_12mo: simulated.revenue[11] * 12,
-                            customer_growth: ((simulated.customers[11] - realData.customers) / realData.customers * 100).toFixed(1) + '%'
-                        }
-                    },
-                    comparison: {
-                        revenue_difference: simulated.revenue[11] * 12 - (realData.monthly_revenue * 12),
-                        customer_difference: simulated.customers[11] - realData.customers
-                    }
-                });
+            },
+            comparison: {
+                revenue_difference: simulated.revenue[11] * 12 - (realData.monthly_revenue * 12),
+                customer_difference: simulated.customers[11] - realData.customers
             }
-        );
+        });
     } catch (error) {
+        console.error('Error comparing metrics:', error);
         res.status(500).json({ error: error.message });
     }
 });
