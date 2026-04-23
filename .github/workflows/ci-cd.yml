@@ -132,62 +132,18 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
 
-  # Job 4: Deploy to Staging (on develop branch)
-  deploy-staging:
-    name: Deploy to Staging
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
-    environment: staging
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy to staging server
-      run: |
-        echo "Deploying to staging environment..."
-        # Add your staging deployment commands here
-        # Example: SSH into server and pull latest image
-        # ssh user@staging-server "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:develop && docker-compose up -d"
-    
-    - name: Run smoke tests on staging
-      run: |
-        sleep 30
-        curl -f https://staging.subscription-simulator.com/api/health || exit 1
-        echo "Staging deployment successful!"
+  # Job 4: Deploy to Staging (disabled - no staging server configured)
+  # deploy-staging:
+  #   name: Deploy to Staging
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/develop' && github.event_name != 'pull_request'
+  #   environment: staging
 
-  # Job 5: Deploy to Production (on main branch)
-  deploy-production:
-    name: Deploy to Production
-    runs-on: ubuntu-latest
-    needs: build
-    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    environment: production
-    
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Deploy to production server
-      run: |
-        echo "Deploying to production environment..."
-        # Add your production deployment commands here
-        # Example: SSH into server and pull latest image
-        # ssh user@production-server "docker pull ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest && docker-compose up -d"
-    
-    - name: Run health checks
-      run: |
-        sleep 30
-        curl -f https://subscription-simulator.com/api/health || exit 1
-        curl -f https://subscription-simulator.com/api/security || exit 1
-        echo "Production deployment successful!"
-    
-    - name: Notify deployment
-      uses: 8398a7/action-slack@v3
-      if: always()
-      with:
-        status: ${{ job.status }}
-        text: 'Production deployment ${{ job.status }}'
-      env:
-        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+  # Job 5: Deploy to Production (disabled - no production server configured)
+  # deploy-production:
+  #   name: Deploy to Production
+  #   runs-on: ubuntu-latest
+  #   needs: build
+  #   if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+  #   environment: production
