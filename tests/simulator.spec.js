@@ -3,8 +3,8 @@ const { test, expect } = require('@playwright/test');
 test.describe('Subscription Revenue Simulator - Phase 1 Testing', () => {
   
   test.beforeEach(async ({ page }) => {
-    // Navigate to the application
-    await page.goto('http://localhost:3000');
+    // Navigate to the deployed application
+    await page.goto('http://subscription-revenue-simulator-697697503244.s3-website-us-east-1.amazonaws.com/index.html');
     await page.waitForLoadState('networkidle');
   });
 
