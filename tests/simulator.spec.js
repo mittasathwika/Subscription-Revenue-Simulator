@@ -6,6 +6,13 @@ test.describe('Subscription Revenue Simulator - Phase 1 Testing', () => {
     // Navigate to the deployed application
     await page.goto('http://subscription-revenue-simulator-697697503244.s3-website-us-east-1.amazonaws.com/index.html');
     await page.waitForLoadState('networkidle');
+    
+    // Close auth modal if present to access dashboard elements
+    const closeBtn = page.locator('.modal-close');
+    if (await closeBtn.isVisible().catch(() => false)) {
+      await closeBtn.click();
+      await page.waitForTimeout(300);
+    }
   });
 
   test('Page loads correctly with all elements', async ({ page }) => {
