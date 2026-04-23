@@ -17,7 +17,10 @@ class EnhancedRevenueSimulator {
         this.revenueChart = null;
         this.customerChart = null;
         this.scenarios = [];
-        this.apiBaseUrl = 'http://localhost:3001/api';
+        // Use relative API URL when deployed (CloudFront/S3 proxy), localhost for local dev
+        this.apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001/api' 
+            : '/api';
         this.useBackend = false;
         
         this.initializeEventListeners();
@@ -590,10 +593,24 @@ class EnhancedRevenueSimulator {
         document.getElementById('authModal').style.display = 'flex';
         document.getElementById('loginError').textContent = '';
         document.getElementById('signupError').textContent = '';
+        
+        // Blur/hide dashboard content behind modal
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.style.filter = 'blur(5px)';
+            mainContent.style.pointerEvents = 'none';
+        }
     }
     
     hideAuthModal() {
         document.getElementById('authModal').style.display = 'none';
+        
+        // Restore dashboard content
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.style.filter = 'none';
+            mainContent.style.pointerEvents = 'auto';
+        }
     }
     
     switchAuthTab(tab) {

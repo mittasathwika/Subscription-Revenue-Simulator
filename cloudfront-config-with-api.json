@@ -1,0 +1,103 @@
+{
+    "CallerReference": "subscription-simulator-cf-api-v2",
+    "Aliases": {
+        "Quantity": 0
+    },
+    "DefaultRootObject": "index.html",
+    "Origins": {
+        "Quantity": 2,
+        "Items": [
+            {
+                "Id": "S3-frontend",
+                "DomainName": "subscription-revenue-simulator-697697503244.s3-website-us-east-1.amazonaws.com",
+                "OriginPath": "",
+                "CustomHeaders": {
+                    "Quantity": 0
+                },
+                "CustomOriginConfig": {
+                    "HTTPPort": 80,
+                    "HTTPSPort": 443,
+                    "OriginProtocolPolicy": "http-only",
+                    "OriginSslProtocols": {
+                        "Quantity": 1,
+                        "Items": ["TLSv1.2"]
+                    }
+                }
+            },
+            {
+                "Id": "EB-backend",
+                "DomainName": "subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com",
+                "OriginPath": "",
+                "CustomHeaders": {
+                    "Quantity": 0
+                },
+                "CustomOriginConfig": {
+                    "HTTPPort": 80,
+                    "HTTPSPort": 443,
+                    "OriginProtocolPolicy": "http-only",
+                    "OriginSslProtocols": {
+                        "Quantity": 1,
+                        "Items": ["TLSv1.2"]
+                    }
+                }
+            }
+        ]
+    },
+    "DefaultCacheBehavior": {
+        "TargetOriginId": "S3-frontend",
+        "ViewerProtocolPolicy": "redirect-to-https",
+        "AllowedMethods": {
+            "Quantity": 2,
+            "Items": ["GET", "HEAD"],
+            "CachedMethods": {
+                "Quantity": 2,
+                "Items": ["GET", "HEAD"]
+            }
+        },
+        "ForwardedValues": {
+            "QueryString": false,
+            "Cookies": {
+                "Forward": "none"
+            }
+        },
+        "MinTTL": 0,
+        "DefaultTTL": 86400,
+        "MaxTTL": 31536000,
+        "Compress": true
+    },
+    "CacheBehaviors": {
+        "Quantity": 1,
+        "Items": [
+            {
+                "PathPattern": "/api/*",
+                "TargetOriginId": "EB-backend",
+                "ViewerProtocolPolicy": "https-only",
+                "AllowedMethods": {
+                    "Quantity": 7,
+                    "Items": ["GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+                    "CachedMethods": {
+                        "Quantity": 2,
+                        "Items": ["GET", "HEAD"]
+                    }
+                },
+                "ForwardedValues": {
+                    "QueryString": true,
+                    "Headers": {
+                        "Quantity": 3,
+                        "Items": ["Origin", "Access-Control-Request-Headers", "Access-Control-Request-Method"]
+                    },
+                    "Cookies": {
+                        "Forward": "all"
+                    }
+                },
+                "MinTTL": 0,
+                "DefaultTTL": 0,
+                "MaxTTL": 0,
+                "Compress": true
+            }
+        ]
+    },
+    "Comment": "Subscription Revenue Simulator - HTTPS with API proxy",
+    "PriceClass": "PriceClass_100",
+    "Enabled": true
+}
