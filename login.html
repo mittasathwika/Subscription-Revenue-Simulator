@@ -231,7 +231,9 @@
     </div>
 
     <script>
-        const API_URL = 'http://subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com/api';
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001/api' 
+            : '/api';
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
