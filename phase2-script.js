@@ -29,14 +29,15 @@ class EnhancedRevenueSimulator {
         this.initializeAuthEventListeners();
         this.updateAuthUI();
         
-        // Show auth modal if not authenticated and not in guest mode
+        // Redirect to login page if not authenticated and not in guest mode
         if (!this.authToken && !guestMode) {
-            // Small delay to ensure DOM is ready
-            setTimeout(() => this.showAuthModal(), 100);
-        } else {
-            this.loadScenarios();
-            this.checkBackendConnection();
+            window.location.href = 'login.html';
+            return;
         }
+        
+        // User is authenticated, load data
+        this.loadScenarios();
+        this.checkBackendConnection();
     }
 
     async checkBackendConnection() {
