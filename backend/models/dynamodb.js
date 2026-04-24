@@ -132,13 +132,32 @@ async function deleteScenario(scenarioId) {
 async function getRealMetrics(userEmail) {
     if (!docClient) return null;
     
-    const command = new GetCommand({
-        TableName: TABLES.REAL_METRICS,
-        Key: { user_id: userEmail }
-    });
+    try {
+        // Try Get first (if user_id is partition key)
+        const command = new GetCommand({
+            TableName: TABLES.REAL_METRICS,
+            Key: { user_id: userEmail }
+        });
+        
+        const result = await docClient.send(command);
+        if (result.Item) return result.Item;
+    } catch (e) {
+        // Table may not exist or key mismatch - try Scan as fallback
+        try {
+            const scanCommand = new ScanCommand({
+                TableName: TABLES.REAL_METRICS,
+                FilterExpression: 'user_id = :uid',
+                ExpressionAttributeValues: { ':uid': userEmail }
+            });
+            const scanResult = await docClient.send(scanCommand);
+            return scanResult.Items && scanResult.Items.length > 0 ? scanResult.Items[0] : null;
+        } catch (scanErr) {
+            console.error('Real metrics table error:', scanErr.message);
+            return null;
+        }
+    }
     
-    const result = await docClient.send(command);
-    return result.Item;
+    return null;
 }
 
 async function saveRealMetrics(userEmail, metricsData) {
