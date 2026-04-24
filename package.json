@@ -8,18 +8,6 @@
   },
   "scripts": {
     "start": "cd backend && node server.js",
-    
-        
-        
-        
-            
-        
-        
-        
-        
-        
-        
-        
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
@@ -32,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/mittasathwika/subscription-Revenue-Simulator/issues"
   },
-  "homepage": "https://github.com/mittasathwika/subscription-Revenue-Simulator#readme"
+  "homepage": "https://github.com/mittasathwika/subscription-Revenue-Simulator#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.59.1"
+  }
 }
