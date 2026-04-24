@@ -233,7 +233,9 @@
     <script>
         const API_URL = window.location.hostname === 'localhost' 
             ? 'http://localhost:3001/api' 
-            : '/api';
+            : window.location.hostname.includes('cloudfront.net')
+                ? '/api'  // CloudFront proxies /api to backend
+                : 'http://subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com/api';
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {

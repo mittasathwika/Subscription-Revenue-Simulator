@@ -17,10 +17,12 @@ class EnhancedRevenueSimulator {
         this.revenueChart = null;
         this.customerChart = null;
         this.scenarios = [];
-        // Use relative API URL when deployed (CloudFront/S3 proxy), localhost for local dev
+        // Dynamic API URL: localhost for dev, relative /api for CloudFront proxy, absolute for S3 direct
         this.apiBaseUrl = window.location.hostname === 'localhost' 
             ? 'http://localhost:3001/api' 
-            : '/api';
+            : window.location.hostname.includes('cloudfront.net')
+                ? '/api'  // CloudFront proxies /api to backend
+                : 'http://subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com/api';
         this.useBackend = false;
         
         this.initializeEventListeners();
