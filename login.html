@@ -228,6 +228,33 @@
             background: #059669;
         }
 
+        /* Country Code Selector */
+        .phone-input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        .country-select {
+            width: 110px;
+            padding: 12px 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .country-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .phone-input {
+            flex: 1;
+        }
+
         /* Phone OTP section */
         .phone-section {
             margin-top: 15px;
@@ -261,6 +288,15 @@
 
             .name-row {
                 grid-template-columns: 1fr;
+            }
+
+            .phone-input-wrapper {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .country-select {
+                width: 100%;
             }
         }
     </style>
@@ -309,8 +345,30 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="signupPhone">Mobile Number</label>
-                    <input type="tel" id="signupPhone" required placeholder="+1 234 567 8900" pattern="[\+\d\s\-\(\)]{10,}">
+                    <label for="signupCountryCode">Mobile Number</label>
+                    <div class="phone-input-wrapper">
+                        <select id="signupCountryCode" class="country-select">
+                            <option value="+1" data-flag="🇺🇸">+1 🇺🇸</option>
+                            <option value="+91" data-flag="🇮🇳">+91 🇮🇳</option>
+                            <option value="+44" data-flag="🇬🇧">+44 🇬🇧</option>
+                            <option value="+61" data-flag="🇦🇺">+61 🇦🇺</option>
+                            <option value="+49" data-flag="🇩🇪">+49 🇩🇪</option>
+                            <option value="+33" data-flag="🇫🇷">+33 🇫🇷</option>
+                            <option value="+81" data-flag="🇯🇵">+81 🇯🇵</option>
+                            <option value="+86" data-flag="🇨🇳">+86 🇨🇳</option>
+                            <option value="+7" data-flag="🇷🇺">+7 🇷🇺</option>
+                            <option value="+39" data-flag="🇮🇹">+39 🇮🇹</option>
+                            <option value="+34" data-flag="🇪🇸">+34 🇪🇸</option>
+                            <option value="+55" data-flag="🇧🇷">+55 🇧🇷</option>
+                            <option value="+65" data-flag="🇸🇬">+65 🇸🇬</option>
+                            <option value="+971" data-flag="🇦🇪">+971 🇦🇪</option>
+                            <option value="+92" data-flag="🇵🇰">+92 🇵🇰</option>
+                            <option value="+880" data-flag="🇧🇩">+880 🇧🇩</option>
+                            <option value="+94" data-flag="🇱🇰">+94 🇱🇰</option>
+                            <option value="+977" data-flag="🇳🇵">+977 🇳🇵</option>
+                        </select>
+                        <input type="tel" id="signupPhone" class="phone-input" required placeholder="234 567 8900" pattern="[\d\s\-\(\)]{7,}">
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="signupEmail">Email</label>
@@ -332,8 +390,30 @@
             <form id="phoneForm" class="hidden">
                 <div id="phoneInputSection">
                     <div class="form-group">
-                        <label for="phoneNumber">Mobile Number</label>
-                        <input type="tel" id="phoneNumber" required placeholder="+1 234 567 8900" pattern="[\+\d\s\-\(\)]{10,}">
+                        <label for="phoneCountryCode">Mobile Number</label>
+                        <div class="phone-input-wrapper">
+                            <select id="phoneCountryCode" class="country-select">
+                                <option value="+1" data-flag="🇺🇸">+1 🇺🇸</option>
+                                <option value="+91" data-flag="🇮🇳">+91 🇮🇳</option>
+                                <option value="+44" data-flag="🇬🇧">+44 🇬🇧</option>
+                                <option value="+61" data-flag="🇦🇺">+61 🇦🇺</option>
+                                <option value="+49" data-flag="🇩🇪">+49 🇩🇪</option>
+                                <option value="+33" data-flag="🇫🇷">+33 🇫🇷</option>
+                                <option value="+81" data-flag="🇯🇵">+81 🇯🇵</option>
+                                <option value="+86" data-flag="🇨🇳">+86 🇨🇳</option>
+                                <option value="+7" data-flag="🇷🇺">+7 🇷🇺</option>
+                                <option value="+39" data-flag="🇮🇹">+39 🇮🇹</option>
+                                <option value="+34" data-flag="🇪🇸">+34 🇪🇸</option>
+                                <option value="+55" data-flag="🇧🇷">+55 🇧🇷</option>
+                                <option value="+65" data-flag="🇸🇬">+65 🇸🇬</option>
+                                <option value="+971" data-flag="🇦🇪">+971 🇦🇪</option>
+                                <option value="+92" data-flag="🇵🇰">+92 🇵🇰</option>
+                                <option value="+880" data-flag="🇧🇩">+880 🇧🇩</option>
+                                <option value="+94" data-flag="🇱🇰">+94 🇱🇰</option>
+                                <option value="+977" data-flag="🇳🇵">+977 🇳🇵</option>
+                            </select>
+                            <input type="tel" id="phoneNumber" class="phone-input" required placeholder="234 567 8900" pattern="[\d\s\-\(\)]{7,}">
+                        </div>
                     </div>
                     <div id="phoneError" class="error-message"></div>
                     <button type="button" class="btn-primary" onclick="requestOTP()">Send OTP</button>
@@ -502,7 +582,9 @@
 
         // Request OTP
         async function requestOTP() {
-            const phone = document.getElementById('phoneNumber').value.trim();
+            const countryCode = document.getElementById('phoneCountryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
             const errorDiv = document.getElementById('phoneError');
             if (!phone) {
                 errorDiv.textContent = 'Please enter your mobile number';
@@ -533,7 +615,9 @@
 
         // Verify OTP
         async function verifyOTP() {
-            const phone = document.getElementById('phoneNumber').value.trim();
+            const countryCode = document.getElementById('phoneCountryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
             const otp = document.getElementById('otpCode').value.trim();
             const errorDiv = document.getElementById('otpError');
             if (!otp || otp.length !== 6) {
@@ -592,7 +676,9 @@
             e.preventDefault();
             const first_name = document.getElementById('signupFirstName').value.trim();
             const last_name = document.getElementById('signupLastName').value.trim();
-            const phone = document.getElementById('signupPhone').value.trim();
+            const countryCode = document.getElementById('signupCountryCode').value;
+            const phoneNumber = document.getElementById('signupPhone').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
             const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
             const confirm_password = document.getElementById('signupConfirmPassword').value;
