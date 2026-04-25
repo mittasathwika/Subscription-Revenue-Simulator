@@ -65,8 +65,8 @@ const optionalAuth = (req, res, next) => {
 /**
  * Generate JWT Token
  */
-const generateToken = (userId, email, expiresIn = '7d') => {
-    return jwt.sign({ userId, email }, JWT_SECRET, { expiresIn });
+const generateToken = (userId, email, firstName, lastName, expiresIn = '7d') => {
+    return jwt.sign({ userId, email, firstName, lastName }, JWT_SECRET, { expiresIn });
 };
 
 /**

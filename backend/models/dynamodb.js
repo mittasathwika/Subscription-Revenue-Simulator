@@ -50,15 +50,63 @@ async function createUser(userData) {
     const command = new PutCommand({
         TableName: TABLES.USERS,
         Item: {
-            id: uuidv4(),             // Partition key (UUID)
-            email: userData.email,    // Email attribute
-            password: userData.password,
-            created_at: new Date().toISOString()
+            id: uuidv4(),                    // Partition key (UUID)
+            email: userData.email,           // Email attribute
+            first_name: userData.first_name || '',
+            last_name: userData.last_name || '',
+            phone: userData.phone || '',
+            password: userData.password || '',
+            auth_provider: userData.auth_provider || 'local', // local, google, facebook, phone
+            social_id: userData.social_id || '',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
         }
     });
     
     await docClient.send(command);
     return userData;
+}
+
+// Get or create user by social auth (Google, Facebook, Phone)
+async function getOrCreateSocialUser(provider, socialId, email, firstName, lastName) {
+    if (!docClient) return null;
+    
+    // Try to find existing user by email first
+    let user = await getUserByEmail(email);
+    
+    if (user) {
+        // Update social auth info if not already set
+        if (!user.auth_provider || user.auth_provider === 'local') {
+            const command = new PutCommand({
+                TableName: TABLES.USERS,
+                Item: {
+                    ...user,
+                    auth_provider: provider,
+                    social_id: socialId,
+                    first_name: firstName || user.first_name || '',
+                    last_name: lastName || user.last_name || '',
+                    updated_at: new Date().toISOString()
+                }
+            });
+            await docClient.send(command);
+            user.auth_provider = provider;
+            user.social_id = socialId;
+        }
+        return user;
+    }
+    
+    // Create new social user
+    const newUser = {
+        email,
+        first_name: firstName || '',
+        last_name: lastName || '',
+        auth_provider: provider,
+        social_id: socialId,
+        password: '' // Social users don't have local password
+    };
+    
+    await createUser(newUser);
+    return newUser;
 }
 
 // Scenario functions
@@ -180,6 +228,7 @@ module.exports = {
     useDynamoDB,
     getUserByEmail,
     createUser,
+    getOrCreateSocialUser,
     getScenarios,
     createScenario,
     getScenarioById,

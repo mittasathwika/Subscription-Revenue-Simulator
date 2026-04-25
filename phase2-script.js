@@ -709,7 +709,15 @@ class EnhancedRevenueSimulator {
         if (this.currentUser) {
             loginBtn.style.display = 'none';
             userInfo.style.display = 'inline';
-            userInfo.textContent = this.currentUser.email;
+            // Show first_name + last_name if available, otherwise email
+            const firstName = this.currentUser.first_name || '';
+            const lastName = this.currentUser.last_name || '';
+            if (firstName || lastName) {
+                userInfo.textContent = `${firstName} ${lastName}`.trim();
+                userInfo.title = this.currentUser.email; // Tooltip with email
+            } else {
+                userInfo.textContent = this.currentUser.email;
+            }
             logoutBtn.style.display = 'inline';
         } else {
             loginBtn.style.display = 'inline';
