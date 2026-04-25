@@ -155,27 +155,27 @@
                 <h2>Simulation Parameters</h2>
                 <div class="input-grid">
                     <div class="input-group">
-                        <label for="price">Monthly Price ($)</label>
+                        <label for="price">Monthly Price ($) <span class="help-icon" data-tooltip="The subscription fee you charge customers every month. This is your core revenue source. Higher prices = higher revenue per customer.">?</span></label>
                         <input type="number" id="price" value="99" min="1" step="1">
                     </div>
                     <div class="input-group">
-                        <label for="churn">Monthly Churn Rate (%)</label>
+                        <label for="churn">Monthly Churn Rate (%) <span class="help-icon" data-tooltip="The percentage of customers who cancel each month. 5% means 5 out of 100 customers leave monthly. Lower churn = more stable revenue.">?</span></label>
                         <input type="number" id="churn" value="5" min="0" max="100" step="0.1">
                     </div>
                     <div class="input-group">
-                        <label for="adSpend">Monthly Ad Spend ($)</label>
+                        <label for="adSpend">Monthly Ad Spend ($) <span class="help-icon" data-tooltip="Your monthly marketing budget for acquiring new customers. This includes ads, campaigns, and promotions to grow your user base.">?</span></label>
                         <input type="number" id="adSpend" value="5000" min="0" step="100">
                     </div>
                     <div class="input-group">
-                        <label for="growthRate">Monthly Growth Rate (%)</label>
+                        <label for="growthRate">Monthly Growth Rate (%) <span class="help-icon" data-tooltip="Expected monthly increase in new customer acquisition. 10% means you gain 10% more new customers each month vs. the previous month.">?</span></label>
                         <input type="number" id="growthRate" value="10" min="0" max="100" step="0.1">
                     </div>
                     <div class="input-group">
-                        <label for="initialCustomers">Initial Customers</label>
+                        <label for="initialCustomers">Initial Customers <span class="help-icon" data-tooltip="The number of paying customers you currently have. This is your starting point for all projections.">?</span></label>
                         <input type="number" id="initialCustomers" value="100" min="0" step="1">
                     </div>
                     <div class="input-group">
-                        <label for="cac">Customer Acquisition Cost ($)</label>
+                        <label for="cac">Customer Acquisition Cost ($) <span class="help-icon" data-tooltip="Average cost to acquire one new customer. Includes ad spend divided by new signups. Lower CAC means more efficient growth.">?</span></label>
                         <input type="number" id="cac" value="500" min="0" step="10">
                     </div>
                 </div>
