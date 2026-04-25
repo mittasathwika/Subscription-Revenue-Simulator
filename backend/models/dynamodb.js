@@ -109,6 +109,28 @@ async function getOrCreateSocialUser(provider, socialId, email, firstName, lastN
     return newUser;
 }
 
+// Update user profile
+async function updateUser(email, updates) {
+    if (!docClient) return null;
+    
+    const user = await getUserByEmail(email);
+    if (!user) return null;
+    
+    const command = new PutCommand({
+        TableName: TABLES.USERS,
+        Item: {
+            ...user,
+            ...updates,
+            id: user.id, // Ensure id is preserved
+            email: user.email, // Ensure email is preserved
+            updated_at: new Date().toISOString()
+        }
+    });
+    
+    await docClient.send(command);
+    return { ...user, ...updates };
+}
+
 // Scenario functions
 async function getScenarios(userEmail) {
     if (!docClient) return [];
@@ -229,6 +251,7 @@ module.exports = {
     getUserByEmail,
     createUser,
     getOrCreateSocialUser,
+    updateUser,
     getScenarios,
     createScenario,
     getScenarioById,

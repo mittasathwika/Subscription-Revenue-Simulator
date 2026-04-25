@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getUserByEmail, createUser, getOrCreateSocialUser } = require('../models/dynamodb');
+const { getUserByEmail, createUser, getOrCreateSocialUser, updateUser } = require('../models/dynamodb');
 const { generateToken, generateRefreshToken } = require('../middleware/auth');
 const { authValidation } = require('../middleware/validator');
 
@@ -325,6 +325,62 @@ router.get('/verify', async (req, res) => {
             }
             
             res.json({ valid: true, user: decoded });
+        });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// PUT /api/auth/profile - Update user profile
+router.put('/profile', async (req, res) => {
+    try {
+        const token = req.headers.authorization?.split(' ')[1];
+        
+        if (!token) {
+            return res.status(401).json({ error: 'No token provided' });
+        }
+        
+        jwt.verify(token, JWT_SECRET, async (err, decoded) => {
+            if (err) {
+                return res.status(401).json({ error: 'Invalid token' });
+            }
+            
+            const { first_name, last_name, phone, current_password, new_password } = req.body;
+            const user = await getUserByEmail(decoded.email);
+            
+            if (!user) {
+                return res.status(404).json({ error: 'User not found' });
+            }
+            
+            const updates = {};
+            
+            if (first_name !== undefined) updates.first_name = first_name;
+            if (last_name !== undefined) updates.last_name = last_name;
+            if (phone !== undefined) updates.phone = phone;
+            
+            // Password change (only for local auth users)
+            if (new_password && user.auth_provider === 'local' && user.password) {
+                if (!current_password) {
+                    return res.status(400).json({ error: 'Current password is required' });
+                }
+                const validPassword = bcrypt.compareSync(current_password, user.password);
+                if (!validPassword) {
+                    return res.status(401).json({ error: 'Current password is incorrect' });
+                }
+                updates.password = bcrypt.hashSync(new_password, 10);
+            }
+            
+            const updatedUser = await updateUser(decoded.email, updates);
+            
+            if (updatedUser) {
+                res.json({
+                    success: true,
+                    user: buildUserResponse(updatedUser),
+                    message: 'Profile updated successfully'
+                });
+            } else {
+                res.status(500).json({ error: 'Failed to update profile' });
+            }
         });
     } catch (error) {
         res.status(500).json({ error: error.message });

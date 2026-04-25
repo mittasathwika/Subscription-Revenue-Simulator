@@ -581,12 +581,26 @@ class EnhancedRevenueSimulator {
         // Login/Logout buttons
         document.getElementById('loginBtn')?.addEventListener('click', () => this.showAuthModal());
         document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout());
-        
+        document.getElementById('logoutBtn2')?.addEventListener('click', () => this.logout());
+
+        // User dropdown toggle
+        const userDropdown = document.getElementById('userDropdown');
+        const userInfoBtn = document.getElementById('userInfoBtn');
+        if (userInfoBtn && userDropdown) {
+            userInfoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('open');
+            });
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => userDropdown.classList.remove('open'));
+            userDropdown.addEventListener('click', (e) => e.stopPropagation());
+        }
+
         // Auth tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', (e) => this.switchAuthTab(e.target.dataset.tab));
         });
-        
+
         // Forms
         document.getElementById('loginForm')?.addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('signupForm')?.addEventListener('submit', (e) => this.handleSignup(e));
@@ -704,24 +718,30 @@ class EnhancedRevenueSimulator {
     updateAuthUI() {
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
-        const userInfo = document.getElementById('userInfo');
-        
+        const userDropdown = document.getElementById('userDropdown');
+        const userInfoBtn = document.getElementById('userInfoBtn');
+
         if (this.currentUser) {
             loginBtn.style.display = 'none';
-            userInfo.style.display = 'inline';
+            if (userDropdown) {
+                userDropdown.style.display = 'inline-block';
+            }
             // Show first_name + last_name if available, otherwise email
             const firstName = this.currentUser.first_name || '';
             const lastName = this.currentUser.last_name || '';
-            if (firstName || lastName) {
-                userInfo.textContent = `${firstName} ${lastName}`.trim();
-                userInfo.title = this.currentUser.email; // Tooltip with email
-            } else {
-                userInfo.textContent = this.currentUser.email;
+            if (userInfoBtn) {
+                if (firstName || lastName) {
+                    userInfoBtn.textContent = `${firstName} ${lastName}`.trim();
+                } else {
+                    userInfoBtn.textContent = this.currentUser.email;
+                }
             }
-            logoutBtn.style.display = 'inline';
+            logoutBtn.style.display = 'none'; // logout moved to dropdown
         } else {
             loginBtn.style.display = 'inline';
-            userInfo.style.display = 'none';
+            if (userDropdown) {
+                userDropdown.style.display = 'none';
+            }
             logoutBtn.style.display = 'none';
         }
     }

@@ -118,7 +118,14 @@
                     </div>
                     <div class="auth-section" id="authSection">
                         <button id="loginBtn" class="btn-secondary">Login</button>
-                        <span id="userInfo" class="user-info" style="display: none;"></span>
+                        <div class="user-dropdown" id="userDropdown" style="display: none;">
+                            <button id="userInfoBtn" class="btn-user">User</button>
+                            <div class="dropdown-menu" id="userMenu">
+                                <a href="profile.html" class="dropdown-item">👤 My Profile</a>
+                                <div class="dropdown-divider"></div>
+                                <button class="dropdown-item" id="logoutBtn2">🚪 Logout</button>
+                            </div>
+                        </div>
                         <button id="logoutBtn" class="btn-secondary" style="display: none;">Logout</button>
                     </div>
                 </div>
