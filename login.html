@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Subscription Revenue Simulator</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
     <style>
         * {
             margin: 0;
@@ -162,6 +163,115 @@
             display: none;
         }
 
+        /* Social login buttons */
+        .social-login {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        .social-login p {
+            color: #94a3b8;
+            font-size: 0.85rem;
+            margin-bottom: 12px;
+        }
+
+        .social-btn {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+
+        .social-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .social-btn.google {
+            background: #fff;
+            color: #444;
+            border: 1px solid #ddd;
+        }
+
+        .social-btn.google:hover {
+            background: #f8f9fa;
+        }
+
+        .social-btn.facebook {
+            background: #1877f2;
+            color: white;
+            border: none;
+        }
+
+        .social-btn.facebook:hover {
+            background: #166fe5;
+        }
+
+        .social-btn.phone {
+            background: #10b981;
+            color: white;
+            border: none;
+        }
+
+        .social-btn.phone:hover {
+            background: #059669;
+        }
+
+        /* Country Code Selector */
+        .phone-input-wrapper {
+            display: flex;
+            gap: 8px;
+        }
+
+        .country-select {
+            width: 110px;
+            padding: 12px 8px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            background: #fff;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .country-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .phone-input {
+            flex: 1;
+        }
+
+        /* Phone OTP section */
+        .phone-section {
+            margin-top: 15px;
+        }
+
+        .otp-input {
+            letter-spacing: 8px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .name-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
         @media (max-width: 480px) {
             .login-container {
                 border-radius: 0;
@@ -175,8 +285,25 @@
             .login-body {
                 padding: 20px;
             }
+
+            .name-row {
+                grid-template-columns: 1fr;
+            }
+
+            .phone-input-wrapper {
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .country-select {
+                width: 100%;
+            }
         }
     </style>
+    <!-- Google Identity Services -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/en_US/sdk.js"></script>
 </head>
 <body>
     <div class="login-container">
@@ -207,30 +334,128 @@
 
             <!-- Signup Form -->
             <form id="signupForm" class="hidden">
+                <div class="name-row">
+                    <div class="form-group">
+                        <label for="signupFirstName">First Name</label>
+                        <input type="text" id="signupFirstName" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="signupLastName">Last Name</label>
+                        <input type="text" id="signupLastName" required placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="signupCountryCode">Mobile Number</label>
+                    <div class="phone-input-wrapper">
+                        <select id="signupCountryCode" class="country-select">
+                            <option value="+1" data-flag="🇺🇸">+1 🇺🇸</option>
+                            <option value="+91" data-flag="🇮🇳">+91 🇮🇳</option>
+                            <option value="+44" data-flag="🇬🇧">+44 🇬🇧</option>
+                            <option value="+61" data-flag="🇦🇺">+61 🇦🇺</option>
+                            <option value="+49" data-flag="🇩🇪">+49 🇩🇪</option>
+                            <option value="+33" data-flag="🇫🇷">+33 🇫🇷</option>
+                            <option value="+81" data-flag="🇯🇵">+81 🇯🇵</option>
+                            <option value="+86" data-flag="🇨🇳">+86 🇨🇳</option>
+                            <option value="+7" data-flag="🇷🇺">+7 🇷🇺</option>
+                            <option value="+39" data-flag="🇮🇹">+39 🇮🇹</option>
+                            <option value="+34" data-flag="🇪🇸">+34 🇪🇸</option>
+                            <option value="+55" data-flag="🇧🇷">+55 🇧🇷</option>
+                            <option value="+65" data-flag="🇸🇬">+65 🇸🇬</option>
+                            <option value="+971" data-flag="🇦🇪">+971 🇦🇪</option>
+                            <option value="+92" data-flag="🇵🇰">+92 🇵🇰</option>
+                            <option value="+880" data-flag="🇧🇩">+880 🇧🇩</option>
+                            <option value="+94" data-flag="🇱🇰">+94 🇱🇰</option>
+                            <option value="+977" data-flag="🇳🇵">+977 🇳🇵</option>
+                        </select>
+                        <input type="tel" id="signupPhone" class="phone-input" required placeholder="234 567 8900" pattern="[\d\s\-\(\)]{7,}">
+                    </div>
+                </div>
                 <div class="form-group">
                     <label for="signupEmail">Email</label>
                     <input type="email" id="signupEmail" required placeholder="Enter your email">
                 </div>
                 <div class="form-group">
                     <label for="signupPassword">Password</label>
-                    <input type="password" id="signupPassword" required placeholder="Create password (min 6 chars)" minlength="6">
+                    <input type="password" id="signupPassword" required placeholder="Min 8 chars, A-Z, a-z, 0-9" minlength="8">
+                </div>
+                <div class="form-group">
+                    <label for="signupConfirmPassword">Confirm Password</label>
+                    <input type="password" id="signupConfirmPassword" required placeholder="Re-enter your password" minlength="8">
                 </div>
                 <div id="signupError" class="error-message"></div>
                 <button type="submit" class="btn-primary">Create Account</button>
             </form>
 
+            <!-- Phone OTP Login -->
+            <form id="phoneForm" class="hidden">
+                <div id="phoneInputSection">
+                    <div class="form-group">
+                        <label for="phoneCountryCode">Mobile Number</label>
+                        <div class="phone-input-wrapper">
+                            <select id="phoneCountryCode" class="country-select">
+                                <option value="+1" data-flag="🇺🇸">+1 🇺🇸</option>
+                                <option value="+91" data-flag="🇮🇳">+91 🇮🇳</option>
+                                <option value="+44" data-flag="🇬🇧">+44 🇬🇧</option>
+                                <option value="+61" data-flag="🇦🇺">+61 🇦🇺</option>
+                                <option value="+49" data-flag="🇩🇪">+49 🇩🇪</option>
+                                <option value="+33" data-flag="🇫🇷">+33 🇫🇷</option>
+                                <option value="+81" data-flag="🇯🇵">+81 🇯🇵</option>
+                                <option value="+86" data-flag="🇨🇳">+86 🇨🇳</option>
+                                <option value="+7" data-flag="🇷🇺">+7 🇷🇺</option>
+                                <option value="+39" data-flag="🇮🇹">+39 🇮🇹</option>
+                                <option value="+34" data-flag="🇪🇸">+34 🇪🇸</option>
+                                <option value="+55" data-flag="🇧🇷">+55 🇧🇷</option>
+                                <option value="+65" data-flag="🇸🇬">+65 🇸🇬</option>
+                                <option value="+971" data-flag="🇦🇪">+971 🇦🇪</option>
+                                <option value="+92" data-flag="🇵🇰">+92 🇵🇰</option>
+                                <option value="+880" data-flag="🇧🇩">+880 🇧🇩</option>
+                                <option value="+94" data-flag="🇱🇰">+94 🇱🇰</option>
+                                <option value="+977" data-flag="🇳🇵">+977 🇳🇵</option>
+                            </select>
+                            <input type="tel" id="phoneNumber" class="phone-input" required placeholder="234 567 8900" pattern="[\d\s\-\(\)]{7,}">
+                        </div>
+                    </div>
+                    <div id="phoneError" class="error-message"></div>
+                    <button type="button" class="btn-primary" onclick="requestOTP()">Send OTP</button>
+                </div>
+                <div id="otpSection" class="hidden">
+                    <div class="form-group">
+                        <label for="otpCode">Enter OTP</label>
+                        <input type="text" id="otpCode" class="otp-input" maxlength="6" placeholder="000000" pattern="\d{6}">
+                    </div>
+                    <div id="otpError" class="error-message"></div>
+                    <button type="button" class="btn-primary" onclick="verifyOTP()">Verify & Login</button>
+                    <button type="button" class="btn-demo" style="margin-top:8px;" onclick="showPhoneInput()">Back to Phone</button>
+                </div>
+            </form>
+
+            <!-- Social Login -->
+            <div class="social-login">
+                <p>Or login with</p>
+                <div id="googleSignIn"></div>
+                <button class="social-btn facebook" onclick="loginWithFacebook()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    Continue with Facebook
+                </button>
+                <button class="social-btn phone" onclick="showPhoneLogin()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    Login with Phone
+                </button>
+            </div>
+
             <div class="demo-section">
                 <p>Or try without an account</p>
                 <button class="btn-demo" onclick="continueAsGuest()">Continue as Guest</button>
-                <p style="margin-top: 10px; font-size: 0.8rem; color: #94a3b8;">
-                    Demo login: demo@example.com / demo123
-                </p>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = 'http://localhost:3001/api';
+        const API_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001/api' 
+            : window.location.hostname.includes('cloudfront.net')
+                ? '/api'  // CloudFront proxies /api to backend
+                : 'http://subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com/api';
 
         // Tab switching
         document.querySelectorAll('.tab').forEach(tab => {
@@ -239,13 +464,10 @@
                 tab.classList.add('active');
                 
                 const target = tab.dataset.tab;
-                if (target === 'login') {
-                    document.getElementById('loginForm').classList.remove('hidden');
-                    document.getElementById('signupForm').classList.add('hidden');
-                } else {
-                    document.getElementById('loginForm').classList.add('hidden');
-                    document.getElementById('signupForm').classList.remove('hidden');
-                }
+                document.getElementById('loginForm').classList.toggle('hidden', target !== 'login');
+                document.getElementById('signupForm').classList.toggle('hidden', target !== 'signup');
+                document.getElementById('phoneForm').classList.add('hidden');
+                document.querySelector('.social-login').classList.remove('hidden');
             });
         });
 
@@ -253,6 +475,172 @@
         const token = localStorage.getItem('authToken');
         if (token) {
             window.location.href = 'index.html';
+        }
+
+        // Initialize Google Sign-In
+        window.onload = function() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com',
+                    callback: handleGoogleCredentialResponse,
+                    auto_select: false,
+                    cancel_on_tap_outside: true
+                });
+                google.accounts.id.renderButton(
+                    document.getElementById('googleSignIn'),
+                    { 
+                        theme: 'outline', 
+                        size: 'large', 
+                        width: '100%',
+                        text: 'continue_with'
+                    }
+                );
+            }
+
+            // Initialize Facebook SDK
+            if (typeof FB !== 'undefined') {
+                FB.init({
+                    appId: 'YOUR_FACEBOOK_APP_ID',
+                    cookie: true,
+                    xfbml: true,
+                    version: 'v18.0'
+                });
+            }
+        };
+
+        // Google login callback
+        async function handleGoogleCredentialResponse(response) {
+            try {
+                const res = await fetch(`${API_URL}/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ credential: response.credential })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    window.location.href = 'index.html';
+                } else {
+                    document.getElementById('loginError').textContent = data.error || 'Google login failed';
+                }
+            } catch (err) {
+                document.getElementById('loginError').textContent = 'Google login error: ' + err.message;
+            }
+        }
+
+        // Facebook login
+        function loginWithFacebook() {
+            if (typeof FB === 'undefined') {
+                document.getElementById('loginError').textContent = 'Facebook SDK not loaded. Please try again.';
+                return;
+            }
+            FB.login(function(response) {
+                if (response.authResponse) {
+                    FB.api('/me', { fields: 'id,email,first_name,last_name,name' }, async function(userInfo) {
+                        try {
+                            const res = await fetch(`${API_URL}/auth/facebook`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    accessToken: response.authResponse.accessToken,
+                                    userID: response.authResponse.userID
+                                })
+                            });
+                            const data = await res.json();
+                            if (res.ok) {
+                                localStorage.setItem('authToken', data.token);
+                                localStorage.setItem('currentUser', JSON.stringify(data.user));
+                                window.location.href = 'index.html';
+                            } else {
+                                document.getElementById('loginError').textContent = data.error || 'Facebook login failed';
+                            }
+                        } catch (err) {
+                            document.getElementById('loginError').textContent = 'Facebook login error: ' + err.message;
+                        }
+                    });
+                } else {
+                    document.getElementById('loginError').textContent = 'Facebook login cancelled.';
+                }
+            }, {scope: 'email,public_profile'});
+        }
+
+        // Phone login - show phone form
+        function showPhoneLogin() {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('signupForm').classList.add('hidden');
+            document.getElementById('phoneForm').classList.remove('hidden');
+            document.querySelector('.social-login').classList.add('hidden');
+            showPhoneInput();
+        }
+
+        function showPhoneInput() {
+            document.getElementById('phoneInputSection').classList.remove('hidden');
+            document.getElementById('otpSection').classList.add('hidden');
+        }
+
+        // Request OTP
+        async function requestOTP() {
+            const countryCode = document.getElementById('phoneCountryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
+            const errorDiv = document.getElementById('phoneError');
+            if (!phone) {
+                errorDiv.textContent = 'Please enter your mobile number';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/auth/phone/request`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    errorDiv.textContent = '';
+                    document.getElementById('phoneInputSection').classList.add('hidden');
+                    document.getElementById('otpSection').classList.remove('hidden');
+                    // DEMO: Show OTP for testing
+                    if (data.demo_otp) {
+                        alert(`Demo OTP: ${data.demo_otp} (In production, this is sent via SMS)`);
+                    }
+                } else {
+                    errorDiv.textContent = data.error || 'Failed to send OTP';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+            }
+        }
+
+        // Verify OTP
+        async function verifyOTP() {
+            const countryCode = document.getElementById('phoneCountryCode').value;
+            const phoneNumber = document.getElementById('phoneNumber').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
+            const otp = document.getElementById('otpCode').value.trim();
+            const errorDiv = document.getElementById('otpError');
+            if (!otp || otp.length !== 6) {
+                errorDiv.textContent = 'Please enter the 6-digit OTP';
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/auth/phone/verify`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone, otp })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('authToken', data.token);
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    window.location.href = 'index.html';
+                } else {
+                    errorDiv.textContent = data.error || 'OTP verification failed';
+                }
+            } catch (err) {
+                errorDiv.textContent = 'Error: ' + err.message;
+            }
         }
 
         // Login handler
@@ -286,15 +674,35 @@
         // Signup handler
         document.getElementById('signupForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('signupEmail').value;
+            const first_name = document.getElementById('signupFirstName').value.trim();
+            const last_name = document.getElementById('signupLastName').value.trim();
+            const countryCode = document.getElementById('signupCountryCode').value;
+            const phoneNumber = document.getElementById('signupPhone').value.trim().replace(/\s+/g, '');
+            const phone = countryCode + phoneNumber;
+            const email = document.getElementById('signupEmail').value.trim();
             const password = document.getElementById('signupPassword').value;
+            const confirm_password = document.getElementById('signupConfirmPassword').value;
             const errorDiv = document.getElementById('signupError');
+
+            // Client-side validation
+            if (password !== confirm_password) {
+                errorDiv.textContent = 'Passwords do not match';
+                return;
+            }
+            if (password.length < 8) {
+                errorDiv.textContent = 'Password must be at least 8 characters';
+                return;
+            }
+            if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/[0-9]/.test(password)) {
+                errorDiv.textContent = 'Password must contain uppercase, lowercase, and number';
+                return;
+            }
 
             try {
                 const response = await fetch(`${API_URL}/auth/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ first_name, last_name, phone, email, password, confirm_password })
                 });
 
                 const data = await response.json();
@@ -303,6 +711,9 @@
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('currentUser', JSON.stringify(data.user));
                     window.location.href = 'index.html';
+                } else if (data.details) {
+                    // Validation errors
+                    errorDiv.textContent = data.details.map(d => d.message).join(', ');
                 } else {
                     errorDiv.textContent = data.error || 'Signup failed';
                 }
