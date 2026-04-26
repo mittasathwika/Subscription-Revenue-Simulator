@@ -359,15 +359,17 @@ router.put('/profile', async (req, res) => {
             if (phone !== undefined) updates.phone = phone;
             
             // Password change (only for local auth users)
-            if (new_password && user.auth_provider === 'local' && user.password) {
+            const userPassword = user.password || user.password_hash;
+            if (new_password && user.auth_provider === 'local' && userPassword) {
                 if (!current_password) {
                     return res.status(400).json({ error: 'Current password is required' });
                 }
-                const validPassword = bcrypt.compareSync(current_password, user.password);
+                const validPassword = bcrypt.compareSync(current_password, userPassword);
                 if (!validPassword) {
                     return res.status(401).json({ error: 'Current password is incorrect' });
                 }
                 updates.password = bcrypt.hashSync(new_password, 10);
+                updates.password_hash = bcrypt.hashSync(new_password, 10); // store in both fields for compatibility
             }
             
             const updatedUser = await updateUser(decoded.email, updates);
