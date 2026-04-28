@@ -75,7 +75,7 @@ jobs:
     
     - name: Install test dependencies
       working-directory: ./tests
-      run: npm ci
+      run: npm install
     
     - name: Run Playwright tests
       working-directory: ./tests
