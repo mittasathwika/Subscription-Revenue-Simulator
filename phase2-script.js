@@ -13,22 +13,29 @@ class EnhancedRevenueSimulator {
         this.currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
         const guestMode = localStorage.getItem('guestMode') === 'true';
         
-        // Redirect to login if not authenticated and not in guest mode
-        if (!this.authToken && !guestMode) {
-            window.location.href = 'login.html';
-            return;
-        }
-        
         this.currentProjection = null;
         this.revenueChart = null;
         this.customerChart = null;
         this.scenarios = [];
-        this.apiBaseUrl = 'http://localhost:3001/api';
+        // Dynamic API URL: localhost for dev, relative /api for CloudFront proxy, absolute for S3 direct
+        this.apiBaseUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3001/api' 
+            : window.location.hostname.includes('cloudfront.net')
+                ? '/api'  // CloudFront proxies /api to backend
+                : 'http://subscription-simulator-api-env.eba-bwarrbi6.us-east-1.elasticbeanstalk.com/api';
         this.useBackend = false;
         
         this.initializeEventListeners();
         this.initializeAuthEventListeners();
         this.updateAuthUI();
+        
+        // Redirect to login page if not authenticated and not in guest mode
+        if (!this.authToken && !guestMode) {
+            window.location.href = 'login.html';
+            return;
+        }
+        
+        // User is authenticated, load data
         this.loadScenarios();
         this.checkBackendConnection();
     }
@@ -234,30 +241,30 @@ class EnhancedRevenueSimulator {
             <div class="metrics-section">
                 <h4>Revenue Metrics</h4>
                 <div class="metric-row">
-                    <span>MRR (Month 12):</span>
+                    <span>MRR (Month 12): <span class="help-icon" data-tooltip="Monthly Recurring Revenue at month 12 - your expected monthly subscription revenue">?</span></span>
                     <strong>$${metrics.mrr.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>ARR (Month 12):</span>
+                    <span>ARR (Month 12): <span class="help-icon" data-tooltip="Annual Recurring Revenue = MRR x 12 - your yearly subscription revenue">?</span></span>
                     <strong>$${metrics.arr.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>Total Revenue (12 mo):</span>
+                    <span>Total Revenue (12 mo): <span class="help-icon" data-tooltip="Sum of all monthly revenues over the first 12 months including growth and churn">?</span></span>
                     <strong>$${totalRevenue.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>ARPU:</span>
+                    <span>ARPU: <span class="help-icon" data-tooltip="Average Revenue Per User = MRR / Total Customers - revenue generated per subscriber on average">?</span></span>
                     <strong>$${metrics.arpu.toFixed(2)}</strong>
                 </div>
             </div>
             <div class="metrics-section">
                 <h4>Growth Metrics</h4>
                 <div class="metric-row">
-                    <span>Final Customers:</span>
+                    <span>Final Customers: <span class="help-icon" data-tooltip="Total number of paying customers at the end of month 12 after accounting for new acquisitions and churn">?</span></span>
                     <strong>${customers[11].toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>Customer Growth:</span>
+                    <span>Customer Growth: <span class="help-icon" data-tooltip="Percentage increase in customers from month 1 to month 12 - measures overall customer acquisition vs churn">?</span></span>
                     <strong>${((customers[11] - customers[0]) / customers[0] * 100).toFixed(1)}%</strong>
                 </div>
             </div>
@@ -514,21 +521,56 @@ class EnhancedRevenueSimulator {
             return;
         }
         
-        const data = {
-            inputs: this.currentProjection.inputs,
-            projection: {
-                customers: this.currentProjection.customers,
-                revenue: this.currentProjection.revenue
-            },
-            metrics: this.currentProjection.metrics,
-            exportedAt: new Date().toISOString()
-        };
+        const inputs = this.currentProjection.inputs;
+        const customers = this.currentProjection.customers;
+        const revenue = this.currentProjection.revenue;
+        const metrics = this.currentProjection.metrics || this.calculateMetrics(this.currentProjection);
+        const months = customers ? customers.length : 12;
         
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        // Helper to format numbers without commas (commas break CSV columns)
+        const fmt = (num) => Number(num || 0).toFixed(2);
+        const fmtInt = (num) => Math.round(num || 0).toString();
+        
+        // Build CSV content
+        let csv = 'Subscription Revenue Simulator - Export\n';
+        csv += `Generated on,"${new Date().toLocaleString()}"\n\n`;
+        
+        // Section 1: Inputs
+        csv += 'INPUTS\n';
+        csv += 'Parameter,Value\n';
+        csv += `Monthly Price,$${fmt(inputs?.price)}\n`;
+        csv += `Churn Rate,${fmt((inputs?.churn || 0) * 100)}%\n`;
+        csv += `Ad Spend,$${fmt(inputs?.adSpend)}\n`;
+        csv += `Growth Rate,${fmt((inputs?.growthRate || 0) * 100)}%\n`;
+        csv += `Initial Customers,${fmtInt(inputs?.initialCustomers)}\n`;
+        csv += `CAC (Customer Acquisition Cost),$${fmt(inputs?.cac)}\n\n`;
+        
+        // Section 2: Key Metrics (with safe defaults)
+        csv += 'KEY METRICS\n';
+        csv += 'Metric,Value\n';
+        csv += `Total Customers,${fmtInt(metrics?.totalCustomers || customers?.[customers.length-1] || 0)}\n`;
+        csv += `Monthly Revenue,$${fmt(metrics?.monthlyRevenue || revenue?.[revenue.length-1] || 0)}\n`;
+        csv += `Annual Revenue (ARR),$${fmt(metrics?.arr || 0)}\n`;
+        csv += `Average Revenue Per User (ARPU),$${fmt(metrics?.arpu)}\n`;
+        csv += `Customer Lifetime Value (LTV),$${fmt(metrics?.ltv)}\n`;
+        csv += `LTV/CAC Ratio,${fmt(metrics?.ltvCacRatio)}\n`;
+        csv += `CAC Payback Period,${fmt(metrics?.paybackPeriod)} months\n\n`;
+        
+        // Section 3: Monthly Projections
+        csv += 'MONTHLY PROJECTIONS\n';
+        csv += 'Month,Customers,Revenue\n';
+        for (let i = 0; i < months; i++) {
+            const cust = customers?.[i] || 0;
+            const rev = revenue?.[i] || 0;
+            csv += `Month ${i + 1},${fmtInt(cust)},$${fmt(rev)}\n`;
+        }
+        
+        // Create and download CSV file
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `simulation-${Date.now()}.json`;
+        a.download = `simulation-${new Date().toISOString().split('T')[0]}.csv`;
         a.click();
         URL.revokeObjectURL(url);
     }
@@ -539,12 +581,26 @@ class EnhancedRevenueSimulator {
         // Login/Logout buttons
         document.getElementById('loginBtn')?.addEventListener('click', () => this.showAuthModal());
         document.getElementById('logoutBtn')?.addEventListener('click', () => this.logout());
-        
+        document.getElementById('logoutBtn2')?.addEventListener('click', () => this.logout());
+
+        // User dropdown toggle
+        const userDropdown = document.getElementById('userDropdown');
+        const userInfoBtn = document.getElementById('userInfoBtn');
+        if (userInfoBtn && userDropdown) {
+            userInfoBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                userDropdown.classList.toggle('open');
+            });
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => userDropdown.classList.remove('open'));
+            userDropdown.addEventListener('click', (e) => e.stopPropagation());
+        }
+
         // Auth tabs
         document.querySelectorAll('.auth-tab').forEach(tab => {
             tab.addEventListener('click', (e) => this.switchAuthTab(e.target.dataset.tab));
         });
-        
+
         // Forms
         document.getElementById('loginForm')?.addEventListener('submit', (e) => this.handleLogin(e));
         document.getElementById('signupForm')?.addEventListener('submit', (e) => this.handleSignup(e));
@@ -554,10 +610,24 @@ class EnhancedRevenueSimulator {
         document.getElementById('authModal').style.display = 'flex';
         document.getElementById('loginError').textContent = '';
         document.getElementById('signupError').textContent = '';
+        
+        // Blur/hide dashboard content behind modal
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.style.filter = 'blur(5px)';
+            mainContent.style.pointerEvents = 'none';
+        }
     }
     
     hideAuthModal() {
         document.getElementById('authModal').style.display = 'none';
+        
+        // Restore dashboard content
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) {
+            mainContent.style.filter = 'none';
+            mainContent.style.pointerEvents = 'auto';
+        }
     }
     
     switchAuthTab(tab) {
@@ -648,16 +718,30 @@ class EnhancedRevenueSimulator {
     updateAuthUI() {
         const loginBtn = document.getElementById('loginBtn');
         const logoutBtn = document.getElementById('logoutBtn');
-        const userInfo = document.getElementById('userInfo');
-        
+        const userDropdown = document.getElementById('userDropdown');
+        const userInfoBtn = document.getElementById('userInfoBtn');
+
         if (this.currentUser) {
             loginBtn.style.display = 'none';
-            userInfo.style.display = 'inline';
-            userInfo.textContent = this.currentUser.email;
-            logoutBtn.style.display = 'inline';
+            if (userDropdown) {
+                userDropdown.style.display = 'inline-block';
+            }
+            // Show first_name + last_name if available, otherwise email
+            const firstName = this.currentUser.first_name || '';
+            const lastName = this.currentUser.last_name || '';
+            if (userInfoBtn) {
+                if (firstName || lastName) {
+                    userInfoBtn.textContent = `${firstName} ${lastName}`.trim();
+                } else {
+                    userInfoBtn.textContent = this.currentUser.email;
+                }
+            }
+            logoutBtn.style.display = 'none'; // logout moved to dropdown
         } else {
             loginBtn.style.display = 'inline';
-            userInfo.style.display = 'none';
+            if (userDropdown) {
+                userDropdown.style.display = 'none';
+            }
             logoutBtn.style.display = 'none';
         }
     }

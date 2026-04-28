@@ -1,0 +1,42 @@
+name: Deploy to AWS S3
+
+on:
+  push:
+    branches: [ test, main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        
+    - name: Deploy to S3
+      run: |
+        aws s3 sync . s3://subscription-revenue-simulator-697697503244 \
+          --delete \
+          --exclude ".git/*" \
+          --exclude ".github/*" \
+          --exclude ".windsurf/*" \
+          --exclude "tests/*" \
+          --exclude "backend/*" \
+          --exclude "node_modules/*" \
+          --exclude "aws/*" \
+          --exclude "*.md" \
+          --exclude "*.pkg" \
+          --exclude "package-lock.json" \
+          --exclude "backend-deploy*.zip" \
+          --exclude "*.log"
+        
+    - name: Output Website URL
+      run: |
+        echo "🌐 Website deployed to: http://subscription-revenue-simulator-697697503244.s3-website-us-east-1.amazonaws.com"

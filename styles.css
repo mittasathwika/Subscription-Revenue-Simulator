@@ -231,6 +231,67 @@ h2 {
     margin-bottom: 8px;
     color: #4a5568;
     font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Help icon tooltip */
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    background: #3182ce;
+    color: white;
+    border-radius: 50%;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: help;
+    position: relative;
+    flex-shrink: 0;
+    user-select: none;
+}
+
+.help-icon:hover::after,
+.help-icon:active::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1a202c;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.4;
+    white-space: normal;
+    width: 240px;
+    text-align: center;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    opacity: 1;
+    pointer-events: none;
+}
+
+.help-icon:hover::before,
+.help-icon:active::before {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: #1a202c;
+    z-index: 1000;
+}
+
+/* Touch device: click to show tooltip */
+.help-icon.clicked {
+    background: #2c5282;
 }
 
 .input-group input {
@@ -518,6 +579,78 @@ h2 {
 .user-info {
     color: #64748b;
     font-size: 0.9rem;
+}
+
+/* User dropdown menu */
+.user-dropdown {
+    position: relative;
+}
+
+.btn-user {
+    background: #e0e7ff;
+    color: #3182ce;
+    border: 1.5px solid #3182ce;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+}
+
+.btn-user:hover {
+    background: #3182ce;
+    color: white;
+}
+
+.dropdown-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    min-width: 180px;
+    padding: 8px 0;
+    z-index: 1000;
+    animation: dropdownFade 0.2s ease;
+}
+
+@keyframes dropdownFade {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.user-dropdown.open .dropdown-menu {
+    display: block;
+}
+
+.dropdown-item {
+    display: block;
+    width: 100%;
+    padding: 10px 16px;
+    color: #4a5568;
+    text-decoration: none;
+    font-size: 0.9rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.2s ease;
+}
+
+.dropdown-item:hover {
+    background: #edf2f7;
+    color: #2c5282;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 6px 0;
 }
 
 .auth-modal {

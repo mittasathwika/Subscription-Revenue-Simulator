@@ -38,6 +38,20 @@ const sanitizeString = (value) => {
  */
 const authValidation = {
     signup: [
+        body('first_name')
+            .trim()
+            .isLength({ min: 1, max: 50 })
+            .withMessage('First name must be between 1 and 50 characters')
+            .customSanitizer(sanitizeString),
+        body('last_name')
+            .trim()
+            .isLength({ min: 1, max: 50 })
+            .withMessage('Last name must be between 1 and 50 characters')
+            .customSanitizer(sanitizeString),
+        body('phone')
+            .optional({ checkFalsy: true })
+            .isMobilePhone()
+            .withMessage('Please provide a valid mobile phone number'),
         body('email')
             .isEmail()
             .normalizeEmail()
@@ -47,6 +61,14 @@ const authValidation = {
             .withMessage('Password must be at least 8 characters long')
             .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
             .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number'),
+        body('confirm_password')
+            .custom((value, { req }) => {
+                if (value !== req.body.password) {
+                    throw new Error('Password confirmation does not match password');
+                }
+                return true;
+            })
+            .withMessage('Passwords do not match'),
         handleValidationErrors
     ],
     login: [
@@ -57,6 +79,22 @@ const authValidation = {
         body('password')
             .notEmpty()
             .withMessage('Password is required'),
+        handleValidationErrors
+    ],
+    phoneRequest: [
+        body('phone')
+            .isMobilePhone()
+            .withMessage('Please provide a valid mobile phone number'),
+        handleValidationErrors
+    ],
+    phoneVerify: [
+        body('phone')
+            .isMobilePhone()
+            .withMessage('Please provide a valid mobile phone number'),
+        body('otp')
+            .isLength({ min: 4, max: 6 })
+            .isNumeric()
+            .withMessage('OTP must be 4-6 digits'),
         handleValidationErrors
     ]
 };
