@@ -31,8 +31,7 @@ jobs:
           --exclude "backend/*" \
           --exclude "node_modules/*" \
           --exclude "aws/*" \
-          --exclude "*.md" \
-          --acl public-read
+          --exclude "*.md"
         
     - name: Output Website URL
       run: |
