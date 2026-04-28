@@ -241,30 +241,30 @@ class EnhancedRevenueSimulator {
             <div class="metrics-section">
                 <h4>Revenue Metrics</h4>
                 <div class="metric-row">
-                    <span>MRR (Month 12):</span>
+                    <span>MRR (Month 12): <span class="help-icon" data-tooltip="Monthly Recurring Revenue at month 12 - your expected monthly subscription revenue">?</span></span>
                     <strong>$${metrics.mrr.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>ARR (Month 12):</span>
+                    <span>ARR (Month 12): <span class="help-icon" data-tooltip="Annual Recurring Revenue = MRR x 12 - your yearly subscription revenue">?</span></span>
                     <strong>$${metrics.arr.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>Total Revenue (12 mo):</span>
+                    <span>Total Revenue (12 mo): <span class="help-icon" data-tooltip="Sum of all monthly revenues over the first 12 months including growth and churn">?</span></span>
                     <strong>$${totalRevenue.toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>ARPU:</span>
+                    <span>ARPU: <span class="help-icon" data-tooltip="Average Revenue Per User = MRR / Total Customers - revenue generated per subscriber on average">?</span></span>
                     <strong>$${metrics.arpu.toFixed(2)}</strong>
                 </div>
             </div>
             <div class="metrics-section">
                 <h4>Growth Metrics</h4>
                 <div class="metric-row">
-                    <span>Final Customers:</span>
+                    <span>Final Customers: <span class="help-icon" data-tooltip="Total number of paying customers at the end of month 12 after accounting for new acquisitions and churn">?</span></span>
                     <strong>${customers[11].toLocaleString()}</strong>
                 </div>
                 <div class="metric-row">
-                    <span>Customer Growth:</span>
+                    <span>Customer Growth: <span class="help-icon" data-tooltip="Percentage increase in customers from month 1 to month 12 - measures overall customer acquisition vs churn">?</span></span>
                     <strong>${((customers[11] - customers[0]) / customers[0] * 100).toFixed(1)}%</strong>
                 </div>
             </div>
