@@ -31,7 +31,11 @@ jobs:
           --exclude "backend/*" \
           --exclude "node_modules/*" \
           --exclude "aws/*" \
-          --exclude "*.md"
+          --exclude "*.md" \
+          --exclude "*.pkg" \
+          --exclude "package-lock.json" \
+          --exclude "backend-deploy*.zip" \
+          --exclude "*.log"
         
     - name: Output Website URL
       run: |
